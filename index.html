@@ -1,1147 +1,1452 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>艺藏本体论 - 中华传统技艺智能知识图谱</title>
-<script src="lib/tailwind.min.js"></script>
-<script src="lib/echarts.min.js"></script>
-<link rel="stylesheet" href="lib/font-awesome.min.css">
-<script src="lib/three.min.js"></script>
-<script src="lib/OrbitControls.js"></script>
-<script>window.THREE.OrbitControls = THREE.OrbitControls || OrbitControls;</script>
-<script src="lib/d3.min.js"></script>
-<script src="lib/chart.umd.min.js"></script>
-<style>
-:root {
-  --brand-rgb: 178, 34, 34;
-  --ink-rgb: 30, 30, 30;
-  --gold-rgb: 184, 134, 11;
-  --paper-rgb: 252, 248, 240;
-  --card-bg: rgba(255,255,255,0.85);
-}
-body {
-  font-family: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', sans-serif;
-  background: linear-gradient(135deg, #fcf8f0 0%, #f5efe0 50%, #ede4d0 100%);
-  color: rgb(var(--ink-rgb));
-  min-height: 100vh;
-}
-.font-serif-cn {
-  font-family: 'Songti SC', 'STSong', 'SimSun', serif;
-}
-.hero-pattern {
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(178,34,34,0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(184,134,11,0.1) 0%, transparent 50%),
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-.layer-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(178,34,34,0.12);
-  transition: all 0.4s cubic-bezier(.2,.8,.2,1);
-}
-.layer-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(178,34,34,0.12);
-  border-color: rgba(178,34,34,0.3);
-}
-.classic-card {
-  background: white;
-  border: 1px solid rgba(0,0,0,0.06);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.classic-card:hover {
-  border-color: rgb(var(--brand-rgb));
-  box-shadow: 0 6px 20px rgba(178,34,34,0.1);
-  transform: translateY(-2px);
-}
-.tab-btn {
-  transition: all 0.3s ease;
-  border: 1px solid rgba(178,34,34,0.2);
-}
-.tab-btn.active {
-  background: rgb(var(--brand-rgb));
-  color: white;
-  border-color: rgb(var(--brand-rgb));
-}
-.tab-btn:not(.active):hover {
-  background: rgba(178,34,34,0.08);
-}
-.person-card {
-  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(252,248,240,0.9));
-  border-left: 3px solid rgb(var(--brand-rgb));
-  transition: all 0.3s ease;
-}
-.person-card:hover {
-  border-left-width: 6px;
-  background: white;
-  transform: translateX(4px);
-}
-.timeline-item {
-  position: relative;
-  padding-left: 32px;
-  padding-bottom: 24px;
-}
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  left: 7px;
-  top: 28px;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, rgb(var(--brand-rgb)), rgba(178,34,34,0.1));
-}
-.timeline-dot {
-  position: absolute;
-  left: 0;
-  top: 6px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgb(var(--brand-rgb));
-  border: 3px solid #fcf8f0;
-  box-shadow: 0 0 0 2px rgb(var(--brand-rgb));
-}
-.kpi-num {
-  background: linear-gradient(135deg, rgb(var(--brand-rgb)), rgb(var(--gold-rgb)));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.seal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: rgb(var(--brand-rgb));
-  color: white;
-  font-family: 'Songti SC', serif;
-  font-weight: bold;
-  font-size: 20px;
-  border-radius: 4px;
-  transform: rotate(-5deg);
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
-}
-.concept-tag {
-  display: inline-block;
-  padding: 4px 12px;
-  margin: 4px;
-  background: rgba(178,34,34,0.06);
-  border: 1px solid rgba(178,34,34,0.15);
-  border-radius: 16px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.concept-tag:hover {
-  background: rgb(var(--brand-rgb));
-  color: white;
-}
-.checkbox-custom:checked + label {
-  background: rgb(var(--brand-rgb));
-  color: white;
-  border-color: rgb(var(--brand-rgb));
-}
-.checkbox-custom + label {
-  cursor: pointer;
-  padding: 6px 14px;
-  border: 1px solid rgba(178,34,34,0.3);
-  border-radius: 20px;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-select, input {
-  background: white;
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 15px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-select:focus, input:focus {
-  border-color: rgb(var(--brand-rgb));
-}
-.section-title::after {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(to right, rgb(var(--brand-rgb)), transparent);
-  margin-top: 12px;
-}
-@keyframes fadeInUp {
-  from { opacity: 0.95; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.stagger > * {
-  animation: fadeInUp 0.6s cubic-bezier(.2,.8,.2,1) both;
-}
-.stagger > *:nth-child(1) { animation-delay: 0.05s; }
-.stagger > *:nth-child(2) { animation-delay: 0.1s; }
-.stagger > *:nth-child(3) { animation-delay: 0.15s; }
-.stagger > *:nth-child(4) { animation-delay: 0.2s; }
-.stagger > *:nth-child(5) { animation-delay: 0.25s; }
-.stagger > *:nth-child(6) { animation-delay: 0.3s; }
-.stagger > *:nth-child(7) { animation-delay: 0.35s; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>艺藏本体论 - 中华传统技艺智能知识图谱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8B2323',
+                        secondary: '#D4AF37',
+                        ink: '#2C2C2C',
+                        paper: '#F5F0E6',
+                        lightpaper: '#FAF7F0',
+                        darkink: '#1A1A1A'
+                    },
+                    fontFamily: {
+                        song: ['"Noto Serif SC"', '"Songti SC"', 'SimSun', 'serif'],
+                        kai: ['"Kaiti SC"', '"STKaiti"', 'KaiTi', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow-gold {
+                text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            }
+            .paper-texture {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.03'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0H5v5H0v1h5v94h1V6h94V5H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .book-content-text {
+                font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+                line-height: 2.2;
+                text-align: justify;
+                text-indent: 2em;
+                font-size: 1.05rem;
+                color: #2C2C2C;
+            }
+            .nav-link-active {
+                color: #D4AF37;
+                border-bottom: 2px solid #D4AF37;
+            }
+        }
+    </style>
+
+    <style>
+.space-universe { position:relative; background:radial-gradient(ellipse at center, #1a0f0a 0%, #0a0503 100%); border-radius:16px; overflow:hidden; height:800px; box-shadow:0 10px 40px rgba(139,35,35,0.2); border:1px solid #3a2418; }
+.space-timebar { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:90%; z-index:100; }
+.space-year-display { text-align:center; color:#d4af37; font-size:32px; font-weight:700; margin-bottom:15px; text-shadow:0 0 20px #d4af37; }
+.space-slider { width:100%; height:6px; -webkit-appearance:none; background:linear-gradient(90deg, #2c1810, #8B2323, #d4af37); border-radius:3px; outline:none; }
+.space-slider::-webkit-slider-thumb { -webkit-appearance:none; width:24px; height:24px; border-radius:50%; background:#d4af37; cursor:pointer; box-shadow:0 0 20px #d4af37; }
+.space-canvas { width:100%; height:100%; }
+.person-tooltip { position:absolute; background:rgba(44,24,16,0.95); border:1px solid #d4af37; color:#fff; padding:12px 16px; border-radius:8px; pointer-events:none; z-index:200; font-size:14px; display:none; max-width:300px; }
+.person-detail { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(248,244,233,0.98); border:2px solid #8B2323; border-radius:12px; padding:30px; width:500px; max-height:600px; overflow-y:auto; z-index:300; display:none; box-shadow:0 0 50px rgba(212,175,55,0.5); }
+.close-btn { position:absolute; top:15px; right:20px; font-size:24px; color:#8B2323; cursor:pointer; font-weight:700; }
+    </style>
 </head>
-<body class="hero-pattern">
-
-<!-- 顶部导航 -->
-<nav class="sticky top-0 z-50 backdrop-blur-md bg-[rgba(252,248,240,0.9)] border-b border-[rgba(178,34,34,0.1)]">
-  <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="seal">艺</div>
-      <div>
-        <h1 class="font-serif-cn text-xl md:text-2xl font-bold text-[rgb(var(--brand-rgb))]">艺藏本体论</h1>
-        <p class="text-xs text-gray-500 hidden md:block">中华传统技艺智能知识图谱平台</p>
-      </div>
-    </div>
-    <div class="hidden md:flex items-center gap-1 text-sm">
-      <a href="#overview" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">总览</a>
-      <a href="#architecture" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">本体体系</a>
-      <a href="#classics" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">全藏原典</a>
-      <a href="#graph" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">义理图谱</a>
-      <a href="#timeline" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">艺道编年</a>
-      <a href="#masters" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">匠师宗匠</a>
-      <a href="#reasoning" class="px-3 py-1.5 rounded hover:bg-[rgba(178,34,34,0.08)] transition">智能推演</a>
-    </div>
-  </div>
-</nav>
-
-<!-- Hero 区域 -->
-<section id="overview" class="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-20">
-  <div class="grid md:grid-cols-2 gap-10 items-center">
-    <div class="stagger">
-      <div class="inline-block px-3 py-1 bg-[rgba(178,34,34,0.08)] text-[rgb(var(--brand-rgb))] text-sm rounded-full mb-4">
-        道 · 艺 · 器 · 学
-      </div>
-      <h2 class="font-serif-cn text-4xl md:text-6xl font-black leading-tight mb-6">
-        艺藏本体论
-        <span class="block text-2xl md:text-3xl font-normal text-gray-600 mt-3">中华技艺之道的知识世界</span>
-      </h2>
-      <p class="text-[16px] md:text-lg leading-relaxed text-gray-700 mb-8">
-        依「道—法—术—器」四层义理为骨架，以殆知阁所藏446部古典艺学文献为根基，
-        融汇琴棋书画、剑医茶陶、百工奇技，构建贯通艺理、技法、器物、匠人的中华传统技艺本体体系，
-        呈现中华技艺文明的完整知识图谱。
-      </p>
-      <div class="flex flex-wrap gap-3">
-        <button id="btnArch" class="px-6 py-3 bg-[rgb(var(--brand-rgb))] text-white rounded-lg font-medium hover:opacity-90 transition shadow-lg shadow-[rgba(178,34,34,0.2)]">
-          ⊞ 进入本体世界
-        </button>
-        <button id="btnClassic" class="px-6 py-3 border border-[rgba(178,34,34,0.3)] rounded-lg font-medium hover:bg-[rgba(178,34,34,0.05)] transition">
-          📜 艺典原文库
-        </button>
-        <button id="btnGraph" class="px-6 py-3 border border-[rgba(184,134,11,0.4)] bg-[rgba(184,134,11,0.06)] rounded-lg font-medium hover:bg-[rgba(184,134,11,0.12)] transition">
-          探索义理图谱
-        </button>
-      </div>
-    </div>
-
-    <!-- KPI 数据概览 -->
-    <div class="grid grid-cols-2 gap-4 stagger">
-      <div class="layer-card rounded-xl p-6 text-center">
-        <div class="kpi-num font-serif-cn text-5xl md:text-6xl font-black mb-2">446</div>
-        <div class="text-gray-600 text-sm">部艺学典籍</div>
-        <div class="text-xs text-gray-400 mt-1">殆知阁艺藏全目</div>
-      </div>
-      <div class="layer-card rounded-xl p-6 text-center">
-        <div class="kpi-num font-serif-cn text-5xl md:text-6xl font-black mb-2">12</div>
-        <div class="text-gray-600 text-sm">大门类</div>
-        <div class="text-xs text-gray-400 mt-1">书画印乐棋武医饮</div>
-      </div>
-      <div class="layer-card rounded-xl p-6 text-center">
-        <div class="kpi-num font-serif-cn text-5xl md:text-6xl font-black mb-2">320</div>
-        <div class="text-gray-600 text-sm">位宗匠名家</div>
-        <div class="text-xs text-gray-400 mt-1">上溯先秦下迄明清</div>
-      </div>
-      <div class="layer-card rounded-xl p-6 text-center">
-        <div class="kpi-num font-serif-cn text-5xl md:text-6xl font-black mb-2">7</div>
-        <div class="text-gray-600 text-sm">层本体架构</div>
-        <div class="text-xs text-gray-400 mt-1">元模型→文化外延</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 本体七层架构 -->
-<section id="architecture" class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">艺藏本体论七层架构</h3>
-  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 stagger">
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(178,34,34,0.1)] flex items-center justify-center text-[rgb(var(--brand-rgb))] font-bold font-serif-cn">L0</div>
-        <h4 class="font-serif-cn text-lg font-bold">元模型层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">定义艺道本体的核心关系与范畴：道、法、术、器、境、人六类顶层实体，及师承、源流、技法互鉴、器物承载等基础关系。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">实体</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">关系</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">属性</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(184,134,11,0.12)] flex items-center justify-center text-[rgb(var(--gold-rgb))] font-bold font-serif-cn">L1</div>
-        <h4 class="font-serif-cn text-lg font-bold">艺道本体层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">中华技艺哲学的核心范畴：气、韵、意、味、神、妙、能、逸八品，以及气韵生动、以形写神、道法自然等根本艺理。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">气韵</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">意境</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">神妙</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(34,139,34,0.1)] flex items-center justify-center text-green-700 font-bold font-serif-cn">L2</div>
-        <h4 class="font-serif-cn text-lg font-bold">技法范畴层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">各门类的技法体系与美学准则：书画笔法墨法、音乐律吕宫商、武术招式心法、棋道棋理定式、烹饪火候五味。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">笔法</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">墨法</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">心法</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(70,130,180,0.1)] flex items-center justify-center text-steelblue font-bold font-serif-cn" style="color:steelblue">L3</div>
-        <h4 class="font-serif-cn text-lg font-bold">门类流派层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">十二大艺类的流派与家法传承：书画南北宗、琴虞山广陵派、武术内家外家、围棋棋派、茶道流派等体系分野。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">南宗北宗</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">内家外家</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">虞山派</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(128,0,128,0.08)] flex items-center justify-center text-purple-700 font-bold font-serif-cn">L4</div>
-        <h4 class="font-serif-cn text-lg font-bold">典籍载体层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">446部艺学原典的文本实体：历代画论书论、琴谱棋经、茶经酒谱、武术拳谱、工艺考工，及版本注疏传承。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">画论</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">琴谱</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">茶经</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(210,105,30,0.1)] flex items-center justify-center text-chocolate font-bold font-serif-cn" style="color:chocolate">L5</div>
-        <h4 class="font-serif-cn text-lg font-bold">匠师传承层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">历代宗匠、名家、巧匠的人物谱系：从顾恺之、吴道子到齐白石，从俞伯牙、蔡邕到管平湖，师承授受脉络。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">宗师</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">名家</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">师承</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6 md:col-span-2">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-lg bg-[rgba(47,79,79,0.1)] flex items-center justify-center text-[darkslategray] font-bold font-serif-cn">L6</div>
-        <h4 class="font-serif-cn text-lg font-bold">文化外延层</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">艺与道、艺与文、艺与禅、艺与生活的关联：艺道合流的文化精神，文人雅事的生活美学，诗书画印一体的艺术传统，百工之艺与中华文明整体的互动。</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">艺道合一</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">文人雅事</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">诗书画印</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">生活美学</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded">百工之艺</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 全藏原典 · 分类 -->
-<section id="classics" class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">全藏原典 · 艺类分目</h3>
-  <div class="flex flex-wrap gap-2 mb-6" id="categoryTabs">
-    <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium" data-cat="all">全部 (446)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="绘画">绘画 (83)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="草木鸟兽虫鱼">草木虫鱼 (75)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="饮馔">饮馔 (62)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="书法">书法 (58)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="器物">器物 (53)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="武术">武术 (40)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="音乐">音乐 (37)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="篆刻">篆刻 (14)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="综合">综合 (15)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="工艺">工艺 (5)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="棋技">棋技 (3)</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-cat="竞技">竞技 (1)</button>
-  </div>
-
-  <div id="classicsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- 绘画 -->
-    <div class="classic-card rounded-xl p-5" data-cat="绘画">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">古画品录</h5>
-        <span class="text-xs px-2 py-0.5 bg-red-50 text-[rgb(var(--brand-rgb))] rounded">南朝齐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">谢赫 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">提出绘画「六法」：气韵生动、骨法用笔、应物象形、随类赋彩、经营位置、传移模写，为千年画论之宗。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="绘画">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">历代名画记</h5>
-        <span class="text-xs px-2 py-0.5 bg-red-50 text-[rgb(var(--brand-rgb))] rounded">唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">张彦远 撰 · 10卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">中国第一部绘画通史，叙画之源流、兴废，记历代画家370余人，论「书画同体」「六法」，为画史之祖。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="绘画">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">图画见闻志</h5>
-        <span class="text-xs px-2 py-0.5 bg-red-50 text-[rgb(var(--brand-rgb))] rounded">宋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">郭若虚 撰 · 6卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">续《历代名画记》，记唐末至北宋熙宁间画事，论「气韵非师」「用笔三病」，阐发画理精微。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="绘画">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">林泉高致</h5>
-        <span class="text-xs px-2 py-0.5 bg-red-50 text-[rgb(var(--brand-rgb))] rounded">宋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">郭熙 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">山水画论经典，提出「三远法」（高远、深远、平远），论山水观照之法、四时山水之意境，开山水画论新境。</p>
-    </div>
-    <!-- 书法 -->
-    <div class="classic-card rounded-xl p-5" data-cat="书法">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">书谱</h5>
-        <span class="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded">唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">孙过庭 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">书论千古名篇，论书之体势、笔法、源流，提出「初学分布，但求平正；既知平正，务追险绝；既能险绝，复归平正」三阶段论。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="书法">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">书断</h5>
-        <span class="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded">唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">张怀瓘 撰 · 3卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">评书分神、妙、能三品，录古今书家170余人，溯书体源流，为书法品评体系奠基之作。</p>
-    </div>
-    <!-- 音乐 -->
-    <div class="classic-card rounded-xl p-5" data-cat="音乐">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">溪山琴况</h5>
-        <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded">明</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">徐上瀛 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">琴学美学集大成之作，仿二十四诗品，提出琴学「二十四况」：和、静、清、远、古、澹、恬、逸等，为古琴美学圭臬。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="音乐">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">琴史</h5>
-        <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded">宋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">朱长文 撰 · 6卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">中国第一部古琴专史，收录先秦至北宋琴家156人，记琴人逸事、琴曲源流、琴论大旨。</p>
-    </div>
-    <!-- 棋技 -->
-    <div class="classic-card rounded-xl p-5" data-cat="棋技">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">棋经十三篇</h5>
-        <span class="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 rounded">宋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">张拟 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">仿《孙子兵法》十三篇体例论围棋之道：棋局、得算、权舆、合战、虚实、自知、审局等，为围棋理论经典。</p>
-    </div>
-    <!-- 饮馔 -->
-    <div class="classic-card rounded-xl p-5" data-cat="饮馔">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">茶经</h5>
-        <span class="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded">唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">陆羽 撰 · 3卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">世界第一部茶学专著，分源、具、造、器、煮、饮、事、出、略、图十章，论茶之本性、器具、煮饮之法，为茶道元典。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="饮馔">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">酒经</h5>
-        <span class="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded">宋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">朱肱 撰 · 3卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">论酒之历史、酿造工艺、曲药配方、酒之性味，为中国古代酿酒工艺与酒文化集大成之作。</p>
-    </div>
-    <!-- 篆刻 -->
-    <div class="classic-card rounded-xl p-5" data-cat="篆刻">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">学古编</h5>
-        <span class="text-xs px-2 py-0.5 bg-orange-50 text-orange-700 rounded">元</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">吾丘衍 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">篆刻学开山之作，「三十五举」详论篆法、印法之要，为后世篆刻学立法，开文人印学之宗。</p>
-    </div>
-    <!-- 器物 -->
-    <div class="classic-card rounded-xl p-5" data-cat="器物">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">考工记</h5>
-        <span class="text-xs px-2 py-0.5 bg-teal-50 text-teal-700 rounded">先秦</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">佚名 · 2卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">中国现存最早的手工业工艺文献，详记轮、舆、弓、庐、匠、车、梓百工之事，论「天有时，地有气，材有美，工有巧」工艺四要素。</p>
-    </div>
-    <div class="classic-card rounded-xl p-5" data-cat="器物">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">陶说</h5>
-        <span class="text-xs px-2 py-0.5 bg-teal-50 text-teal-700 rounded">清</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">朱琰 撰 · 6卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">中国第一部陶瓷通史，叙说今、古窑、饶州窑（景德镇）等，详考陶瓷源流、名窑、工艺，为陶瓷学经典。</p>
-    </div>
-    <!-- 武术 -->
-    <div class="classic-card rounded-xl p-5" data-cat="武术">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">太极拳论</h5>
-        <span class="text-xs px-2 py-0.5 bg-rose-50 text-rose-700 rounded">清</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">王宗岳 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">太极拳理之宗，论「太极者，无极而生，动静之机，阴阳之母也」，阐发以柔克刚、以静制动、四两拨千斤之理。</p>
-    </div>
-    <!-- 草木鸟兽 -->
-    <div class="classic-card rounded-xl p-5" data-cat="草木鸟兽虫鱼">
-      <div class="flex items-start justify-between mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">茶疏</h5>
-        <span class="text-xs px-2 py-0.5 bg-lime-50 text-lime-700 rounded">明</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-3">许次纾 撰 · 1卷</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">明代茶学名作，论采摘、炒制、收藏、择水、烹点诸法，是明代散茶冲泡法与工夫茶美学的理论结晶。</p>
-    </div>
-  </div>
-</section>
-
-<!-- 分类统计图表 -->
-<section class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <div class="grid md:grid-cols-2 gap-6">
-    <div class="layer-card rounded-xl p-6">
-      <h4 class="font-serif-cn text-lg font-bold mb-4">艺藏十二类文献分布</h4>
-      <div id="categoryChart" style="width:100%;height:320px;"></div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <h4 class="font-serif-cn text-lg font-bold mb-4">历代艺典著作时代分布</h4>
-      <div id="dynastyChart" style="width:100%;height:320px;"></div>
-    </div>
-  </div>
-</section>
-
-<!-- 义理关系图谱 -->
-<section id="graph" class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">义理关系图谱</h3>
-  <div class="layer-card rounded-xl p-6">
-    <div class="flex flex-wrap gap-3 mb-5 items-center">
-      <span class="text-sm text-gray-600">显示类型：</span>
-      <input type="checkbox" id="showConcept" class="checkbox-custom hidden" checked>
-      <label for="showConcept" onclick="toggleGraph('concept')">艺理概念</label>
-      <input type="checkbox" id="showClassic" class="checkbox-custom hidden" checked>
-      <label for="showClassic" onclick="toggleGraph('classic')">典籍论著</label>
-      <input type="checkbox" id="showMaster" class="checkbox-custom hidden">
-      <label for="showMaster" onclick="toggleGraph('master')">宗匠名家</label>
-      <input type="checkbox" id="showSchool" class="checkbox-custom hidden">
-      <label for="showSchool" onclick="toggleGraph('school')">流派门类</label>
-    </div>
-    <div id="graphChart" style="width:100%;height:520px;"></div>
-  </div>
-</section>
-
-<!-- 艺道发展时间轴 -->
-<section id="timeline" class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">艺道发展时间轴</h3>
-  <div class="grid md:grid-cols-2 gap-x-12">
-    <div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">先秦 · 艺之滥觞</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">考工记 · 百工之艺立制</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">《考工记》成书，详载轮、舆、弓、匠等三十工之事，提出「天有时，地有气，材有美，工有巧」工艺哲学，为中华技艺观奠基。</p>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">魏晋 · 艺的自觉</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">顾恺之 · 以形写神</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">顾恺之提出「以形写神」「迁想妙得」，嵇康《声无哀乐论》论音乐本体，中国艺术进入自觉时代，艺从百工之技升进为道之体现。</p>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">南朝齐 · 画理立法</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">谢赫六法 · 艺理圭臬</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">谢赫《古画品录》提出绘画六法，以气韵生动为第一义，建立中华艺术品评的第一套系统标准，影响此后千年艺评。</p>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">唐 · 艺道鼎盛</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">书画乐茶 · 全面繁荣</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">张彦远《历代名画记》为画史之祖，孙过庭《书谱》、张怀瓘《书断》立书学体系，陆羽《茶经》茶道元典，吴道子画圣千秋。</p>
-      </div>
-    </div>
-    <div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">宋 · 文人艺境</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">文人雅艺 · 意境至上</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">郭熙《林泉高致》山水画论，苏轼论「诗画本一律」，朱长文《琴史》、宋徽宗宣和画院，文人艺术兴起，尚意重韵，意境论成熟。</p>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">元 · 文人画成熟</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">赵孟頫 · 书画同源</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">吾丘衍《学古编》开创篆刻学，赵孟頫倡「书画同源」，元四家（黄公望、倪瓒、吴镇、王蒙）将文人山水推向高峰，艺道合流。</p>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">明 · 艺学集成</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">百家艺论 · 体系大成</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">徐上瀛《溪山琴况》立琴学二十四况，计成《园冶》造园学，文震亨《长物志》文人生活美学，董其昌倡南北宗论，艺学全面总结集成。</p>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="text-sm text-[rgb(var(--brand-rgb))] font-medium mb-1">清 · 承古开新</div>
-        <h5 class="font-serif-cn font-bold text-lg mb-2">金石学兴 · 拳术大成</h5>
-        <p class="text-[15px] text-gray-700 leading-relaxed">朱琰《陶说》陶瓷史，石涛《苦瓜和尚画语录》，王宗岳《太极拳论》，金石学兴起，碑学书法复兴，中华传统技艺体系全面成熟。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 艺道理论本体：核心美学概念 -->
-<section class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">艺道 · 中华技艺美学本体</h3>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-    <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium" data-theory="sixfa">六法体系</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-theory="pins">琴之二十四况</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-theory="shuopin">书品三品</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-theory="sanyuan">山水三远</button>
-  </div>
-  <div id="theoryContent" class="layer-card rounded-xl p-6 md:p-8">
-    <div id="sixfa">
-      <h4 class="font-serif-cn text-xl font-bold mb-4">谢赫六法 · 中华艺术根本大法</h4>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-5">六法者何？一曰气韵生动，二曰骨法用笔，三曰应物象形，四曰随类赋彩，五曰经营位置，六曰传移模写。——谢赫《古画品录》</p>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="bg-[rgba(178,34,34,0.04)] rounded-lg p-4">
-          <h6 class="font-serif-cn font-bold text-[rgb(var(--brand-rgb))] mb-2">一、气韵生动</h6>
-          <p class="text-sm leading-relaxed text-gray-700">艺术最高境界，表现对象内在精神气质与生命韵律，为六法之灵魂，中华艺术的终极追求。</p>
+<body class="bg-paper paper-texture font-song text-ink min-h-screen">
+    <!-- 顶部导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 bg-darkink/95 backdrop-blur-sm z-50 border-b border-secondary/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-secondary text-xl font-kai font-bold text-shadow-gold">艺藏本体论</h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#overview" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">总览</a>
+                    <a href="#ontology" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">本体体系</a>
+                    <a href="#books" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">全藏原典</a>
+                    <a href="#space" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">全局时空</a>
+                    <a href="#search" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">全文检索</a>
+                    <a href="#graph" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">义理图谱</a>
+                    <a href="#timeline" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">艺道时间轴</a>
+                    <a href="#aesthetics" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">艺道美学</a>
+                    <a href="#compare" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">流派对比</a>
+                    <a href="#deduce" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">智能推演</a>
+                    <a href="#masters" class="nav-link text-lightpaper hover:text-secondary transition-colors py-5 text-sm">匠师名录</a>
+                </div>
+            </div>
         </div>
-        <div class="bg-[rgba(178,34,34,0.04)] rounded-lg p-4">
-          <h6 class="font-serif-cn font-bold text-[rgb(var(--brand-rgb))] mb-2">二、骨法用笔</h6>
-          <p class="text-sm leading-relaxed text-gray-700">以笔墨线条表现对象骨相神态，用笔为书画之骨，笔墨功夫是中国艺术的根本技法语言。</p>
+    </nav>
+
+    <!-- Hero区域 -->
+    <section class="pt-24 pb-16 px-4 bg-gradient-to-b from-darkink to-primary/90 text-lightpaper">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-[clamp(2rem,5vw,4rem)] font-kai font-bold mb-4 text-secondary text-shadow-gold">艺藏本体论</h1>
+            <p class="text-[clamp(1rem,2vw,1.25rem)] mb-8 text-paper/90 max-w-3xl mx-auto">道进乎技 · 艺通乎神 —— 中华传统技艺智能知识图谱与艺道推演平台</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="scrollToSection('books')" class="bg-secondary/20 hover:bg-secondary/30 border border-secondary/50 text-secondary px-6 py-3 rounded transition-all flex items-center gap-2">
+                    <i class="fa fa-book"></i> 进入艺典文库
+                </button>
+                <button onclick="scrollToSection('graph')" class="bg-primary/30 hover:bg-primary/50 border border-lightpaper/30 text-lightpaper px-6 py-3 rounded transition-all flex items-center gap-2">
+                    <i class="fa fa-sitemap"></i> 探索义理图谱
+                </button>
+            </div>
         </div>
-        <div class="bg-[rgba(178,34,34,0.04)] rounded-lg p-4">
-          <h6 class="font-serif-cn font-bold text-[rgb(var(--brand-rgb))] mb-2">三、应物象形</h6>
-          <p class="text-sm leading-relaxed text-gray-700">依对象本真形态描绘形象，非机械摹仿，而是以形写形、以形传神，形为神之载体。</p>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <!-- 数据概览 -->
+        <section id="overview" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">本体数据概览</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20 shadow-sm text-center">
+                    <h3 class="text-3xl font-bold text-primary" id="total-books-count">446部</h3>
+                    <p class="text-ink/70 mt-2 text-sm">艺学原典</p>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20 shadow-sm text-center">
+                    <h3 class="text-3xl font-bold text-primary" id="total-cats-count">12</h3>
+                    <p class="text-ink/70 mt-2 text-sm">技艺门类</p>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20 shadow-sm text-center">
+                    <h3 class="text-3xl font-bold text-primary">320+</h3>
+                    <p class="text-ink/70 mt-2 text-sm">历代名家</p>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20 shadow-sm text-center">
+                    <h3 class="text-3xl font-bold text-primary">7层</h3>
+                    <p class="text-ink/70 mt-2 text-sm">本体架构</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20 shadow-sm">
+                    <h3 class="font-kai font-bold text-lg mb-4 text-primary">艺藏十二类文献分布</h3>
+                    <canvas id="categoryChart" height="250"></canvas>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20 shadow-sm">
+                    <h3 class="font-kai font-bold text-lg mb-4 text-primary">历代艺典时代分布</h3>
+                    <canvas id="dynastyChart" height="250"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 全局时空宇宙 -->
+        <section id="space" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-4 border-b-2 border-secondary/30 pb-2">🌌 全局时空宇宙</h2>
+            <p class="text-center text-ink/70 mb-6">拖动下方时间轴，观览自先秦至清代两千余年间历代文艺宗匠的星辰升落 · 共 128 位</p>
+            <div class="space-universe">
+                <div class="person-tooltip" id="spaceTooltip"></div>
+                <div class="person-detail" id="personDetail">
+                    <div class="close-btn" onclick="document.getElementById('personDetail').style.display='none'">×</div>
+                    <div id="detailContent"></div>
+                </div>
+                <canvas id="spaceCanvas" class="space-canvas"></canvas>
+                <div class="space-timebar">
+                    <div class="space-year-display" id="yearDisplay">公元 700 年 · 盛唐</div>
+                    <input type="range" class="space-slider" id="timeSlider" min="-500" max="1900" value="700">
+                </div>
+            </div>
+        </section>
+
+        <!-- 本体架构 -->
+        <section id="ontology" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">艺藏本体论七层架构</h2>
+            <div class="grid md:grid-cols-7 gap-4">
+                <div class="bg-gradient-to-b from-primary/90 to-primary rounded-lg p-4 text-lightpaper text-center">
+                    <h3 class="font-bold text-secondary">L0<br>元模型层</h3>
+                    <p class="text-xs mt-2 text-paper/80">道法术器境人</p>
+                </div>
+                <div class="bg-gradient-to-b from-primary/80 to-primary/90 rounded-lg p-4 text-lightpaper text-center">
+                    <h3 class="font-bold text-secondary">L1<br>艺道本体层</h3>
+                    <p class="text-xs mt-2 text-paper/80">气韵 意境 神妙能逸</p>
+                </div>
+                <div class="bg-gradient-to-b from-primary/70 to-primary/80 rounded-lg p-4 text-lightpaper text-center">
+                    <h3 class="font-bold text-secondary">L2<br>技法范畴层</h3>
+                    <p class="text-xs mt-2 text-paper/80">笔法墨法 律吕 心法</p>
+                </div>
+                <div class="bg-gradient-to-b from-primary/60 to-primary/70 rounded-lg p-4 text-lightpaper text-center">
+                    <h3 class="font-bold text-secondary">L3<br>门类流派层</h3>
+                    <p class="text-xs mt-2 text-paper/80">南北宗 内外家 琴派</p>
+                </div>
+                <div class="bg-gradient-to-b from-primary/50 to-primary/60 rounded-lg p-4 text-lightpaper text-center">
+                    <h3 class="font-bold text-secondary">L4<br>典籍载体层</h3>
+                    <p class="text-xs mt-2 text-paper/80">446部艺学原典</p>
+                </div>
+                <div class="bg-gradient-to-b from-primary/40 to-primary/50 rounded-lg p-4 text-lightpaper text-center">
+                    <h3 class="font-bold text-secondary">L5<br>匠师传承层</h3>
+                    <p class="text-xs mt-2 text-paper/80">历代宗匠谱系</p>
+                </div>
+                <div class="bg-gradient-to-b from-primary/30 to-primary/40 rounded-lg p-4 text-darkink text-center">
+                    <h3 class="font-bold text-primary">L6<br>文化外延层</h3>
+                    <p class="text-xs mt-2 text-ink/80">艺道合一 文人雅事</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 全藏原典 -->
+        <section id="books" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">全藏原典 · 典籍文库</h2>
+            
+            <!-- 搜索框 -->
+            <div id="search" class="mb-6">
+                <div class="relative max-w-md">
+                    <input type="text" id="book-search" placeholder="检索典籍名称..." class="w-full pl-10 pr-4 py-2 rounded border border-secondary/30 bg-lightpaper focus:outline-none focus:ring-2 focus:ring-secondary/50">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-ink/50"></i>
+                </div>
+            </div>
+
+            <!-- 分类标签 -->
+            <div class="flex flex-wrap gap-2 mb-6" id="category-tabs">
+                <!-- JS生成分类按钮 -->
+            </div>
+
+            <!-- 典籍列表 -->
+            <div class="mb-8">
+                <h3 class="font-kai font-bold text-lg mb-4 text-primary" id="current-category-title">绘画（83部）</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="books-list">
+                    <!-- JS生成典籍卡片 -->
+                </div>
+            </div>
+
+            <!-- 典籍阅读区 (点击后展开) -->
+            <div id="book-reader" class="hidden bg-lightpaper rounded-lg border border-secondary/30 shadow-lg overflow-hidden">
+                <div class="bg-primary/90 text-lightpaper p-4 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-kai font-bold text-xl text-secondary" id="reader-title"></h3>
+                        <p class="text-sm text-paper/70" id="reader-meta"></p>
+                    </div>
+                    <button onclick="closeReader()" class="text-lightpaper hover:text-secondary text-xl">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-8 max-h-[70vh] overflow-y-auto scrollbar-hide" id="reader-content">
+                    <!-- 典籍正文 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 义理图谱 -->
+        <section id="graph" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">义理关系图谱</h2>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="show-concepts" checked class="accent-secondary">
+                    <span>艺理概念</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="show-books" checked class="accent-secondary">
+                    <span>艺学典籍</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="show-masters" class="accent-secondary">
+                    <span>匠师人物</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                    <input type="checkbox" id="show-schools" class="accent-secondary">
+                    <span>流派门类</span>
+                </label>
+            </div>
+            <div class="bg-lightpaper rounded-lg border border-secondary/20 h-[500px] overflow-hidden" id="graph-container">
+                <!-- D3力导向图 -->
+            </div>
+        </section>
+
+        <!-- 艺道时间轴 -->
+        <section id="timeline" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">艺道发展时间轴</h2>
+            <div class="relative pl-8 border-l-2 border-secondary/30">
+                <!-- 时间轴内容JS生成 -->
+            </div>
+        </section>
+
+        <!-- 艺道美学本体 -->
+        <section id="aesthetics" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">艺道美学本体</h2>
+            <div class="flex flex-wrap gap-2 mb-6" id="aesthetics-tabs">
+                <button class="aesthetic-tab active px-4 py-2 rounded bg-primary text-lightpaper" data-tab="liu-fa">谢赫六法</button>
+                <button class="aesthetic-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-tab="qin-kuang">溪山琴况</button>
+                <button class="aesthetic-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-tab="shu-pin">书品三品</button>
+                <button class="aesthetic-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-tab="san-yuan">山水三远</button>
+            </div>
+            <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20" id="aesthetics-content">
+                <!-- JS切换内容 -->
+            </div>
+        </section>
+
+        <!-- 流派对比器 -->
+        <section id="compare" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">流派对比器</h2>
+            <div class="flex flex-wrap gap-2 mb-6" id="compare-tabs">
+                <button class="compare-tab active px-4 py-2 rounded bg-primary text-lightpaper" data-tab="nan-bei">画南北宗</button>
+                <button class="compare-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-tab="nei-wai">武术内外家</button>
+                <button class="compare-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-tab="qin-pai">琴派源流</button>
+                <button class="compare-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-tab="bei-tie">书法碑帖</button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6" id="compare-content">
+                <!-- JS生成对比内容 -->
+            </div>
+        </section>
+
+        <!-- 概念路径推演 -->
+        <section id="deduce" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">概念路径智能推演</h2>
+            <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                <div class="flex flex-col md:flex-row gap-4 mb-6">
+                    <input type="text" id="deduce-start" placeholder="起始概念（如：气韵）" class="flex-1 px-4 py-2 rounded border border-secondary/30 bg-paper focus:outline-none focus:ring-2 focus:ring-secondary/50">
+                    <input type="text" id="deduce-end" placeholder="目标概念（如：意境）" class="flex-1 px-4 py-2 rounded border border-secondary/30 bg-paper focus:outline-none focus:ring-2 focus:ring-secondary/50">
+                    <button onclick="deducePath()" class="bg-primary hover:bg-primary/90 text-lightpaper px-6 py-2 rounded transition-colors">
+                        <i class="fa fa-compass"></i> 推演路径
+                    </button>
+                </div>
+                <div id="deduce-result" class="p-4 bg-paper/70 rounded min-h-[100px] text-ink/70">
+                    输入起始和目标艺理概念，系统将智能推导二者之间的义理关联路径。例如输入"气韵"和"意境"，可查看二者从哲学本源到技法表现的完整关联脉络。
+                </div>
+            </div>
+        </section>
+
+        <!-- 匠师名录 -->
+        <section id="masters" class="py-12">
+            <h2 class="text-2xl font-kai font-bold text-primary mb-8 border-b-2 border-secondary/30 pb-2">匠师名录 · 历代宗匠</h2>
+            <div class="flex flex-wrap gap-2 mb-6" id="master-tabs">
+                <button class="master-tab active px-4 py-2 rounded bg-primary text-lightpaper" data-cat="painter">画家</button>
+                <button class="master-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-cat="calligrapher">书家</button>
+                <button class="master-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-cat="musician">琴家</button>
+                <button class="master-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-cat="tea">茶人</button>
+                <button class="master-tab px-4 py-2 rounded bg-primary/20 text-primary hover:bg-primary/30" data-cat="wushu">武术家</button>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4" id="masters-list">
+                <!-- JS生成匠师卡片 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-darkink text-paper/60 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+            <p>艺藏本体论 · 中华传统技艺智能知识图谱 | 数据来源：殆知阁艺藏446部典籍</p>
+            <p class="mt-2">参照佛学本体论架构构建，艺道合一，技进乎道</p>
         </div>
-        <div class="bg-[rgba(178,34,34,0.04)] rounded-lg p-4">
-          <h6 class="font-serif-cn font-bold text-[rgb(var(--brand-rgb))] mb-2">四、随类赋彩</h6>
-          <p class="text-sm leading-relaxed text-gray-700">按对象类别本色施以色彩，既求形似色真，又讲究色彩的主观意趣与气韵表达。</p>
-        </div>
-        <div class="bg-[rgba(178,34,34,0.04)] rounded-lg p-4">
-          <h6 class="font-serif-cn font-bold text-[rgb(var(--brand-rgb))] mb-2">五、经营位置</h6>
-          <p class="text-sm leading-relaxed text-gray-700">构图布局之法，即章法、构思。位置需「经营」，是艺术家匠心独运的空间安排，为画之总要。</p>
-        </div>
-        <div class="bg-[rgba(178,34,34,0.04)] rounded-lg p-4">
-          <h6 class="font-serif-cn font-bold text-[rgb(var(--brand-rgb))] mb-2">六、传移模写</h6>
-          <p class="text-sm leading-relaxed text-gray-700">临摹继承传统之法，通过摹写前人佳作学习技法与传统，为学艺入门之道，非终极目的。</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    </footer>
 
-<!-- 门派分野对比 -->
-<section class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">门派分野对比器</h3>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-    <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium" data-school="nanbei">画南北宗</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-school="wushu">武术内外家</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-school="qin">琴派诸流</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-school="shu">书法碑帖</button>
-  </div>
-  <div id="schoolContent" class="grid md:grid-cols-2 gap-6">
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-3 h-3 rounded-full bg-[rgb(var(--brand-rgb))]"></div>
-        <h4 class="font-serif-cn font-bold text-lg">南宗 · 文人画</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">以王维为祖，用渲淡水墨、柔润披麻皴，重天趣、重写意、重气韵，为文人画正脉。</p>
-      <div class="flex flex-wrap gap-2">
-        <span class="concept-tag">王维</span>
-        <span class="concept-tag">董源</span>
-        <span class="concept-tag">巨然</span>
-        <span class="concept-tag">元四家</span>
-        <span class="concept-tag">水墨渲淡</span>
-        <span class="concept-tag">文人意趣</span>
-      </div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-3 h-3 rounded-full bg-[rgb(var(--gold-rgb))]"></div>
-        <h4 class="font-serif-cn font-bold text-lg">北宗 · 院体画</h4>
-      </div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">以李思训父子为祖，用青绿山水、刚劲斧劈皴，重刻画、重工细、重写实，为画院正宗。</p>
-      <div class="flex flex-wrap gap-2">
-        <span class="concept-tag">李思训</span>
-        <span class="concept-tag">李昭道</span>
-        <span class="concept-tag">马远</span>
-        <span class="concept-tag">夏圭</span>
-        <span class="concept-tag">青绿山水</span>
-        <span class="concept-tag">斧劈皴</span>
-      </div>
-    </div>
-  </div>
-</section>
+    <script src="books_index.js"></script>
+    <script>
+        // ===== 全局状态 =====
+        let currentCategory = "绘画";
+        let currentAestheticTab = "liu-fa";
+        let currentCompareTab = "nan-bei";
+        let currentMasterCat = "painter";
 
-<!-- 概念路径智能推演 -->
-<section id="reasoning" class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">概念路径智能推演</h3>
-  <div class="layer-card rounded-xl p-6 md:p-8">
-    <p class="text-[15px] text-gray-600 mb-5">输入起始概念与目标概念，推演两者之间的义理关联路径，探索中华技艺美学的内在脉络。</p>
-    <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-end mb-6">
-      <div class="flex-1">
-        <label class="block text-sm text-gray-500 mb-1" for="fromConcept">起始概念</label>
-        <select id="fromConcept" aria-label="起始概念" class="w-full">
-          <option value="气韵生动">气韵生动</option>
-          <option value="以形写神">以形写神</option>
-          <option value="道法自然">道法自然</option>
-          <option value="书画同源">书画同源</option>
-        </select>
-      </div>
-      <div class="text-center text-2xl text-gray-400 hidden md:block">→</div>
-      <div class="flex-1">
-        <label class="block text-sm text-gray-500 mb-1" for="toConcept">目标概念</label>
-        <select id="toConcept" aria-label="目标概念" class="w-full">
-          <option value="文人画">文人画</option>
-          <option value="意境">意境</option>
-          <option value="逸品">逸品</option>
-          <option value="南北宗">南北宗</option>
-        </select>
-      </div>
-      <button onclick="runReasoning()" class="px-6 py-2.5 bg-[rgb(var(--brand-rgb))] text-white rounded-lg font-medium hover:opacity-90 transition whitespace-nowrap">推演路径</button>
-    </div>
-    <div id="reasoningResult" class="hidden">
-      <div class="border-t border-gray-100 pt-6">
-        <h5 class="font-serif-cn font-bold text-lg mb-4">推演路径</h5>
-        <div id="pathChain" class="flex flex-wrap items-center gap-2 mb-6"></div>
-        <div id="pathExplain" class="bg-[rgba(178,34,34,0.03)] rounded-lg p-5 text-[15px] text-gray-700 leading-relaxed"></div>
-      </div>
-    </div>
-  </div>
-</section>
+        // ===== 导航滚动激活 =====
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('nav-link-active'));
+                link.classList.add('nav-link-active');
+            });
+        });
 
-<!-- 宗匠名家人物 -->
-<section id="masters" class="max-w-7xl mx-auto px-4 md:px-6 py-12">
-  <h3 class="font-serif-cn text-2xl md:text-3xl font-bold section-title mb-8">宗匠 · 名家 · 巧匠</h3>
-  <div class="flex flex-wrap gap-2 mb-6">
-    <button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium" data-people="all">全部</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-people="绘画">画家</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-people="书法">书家</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-people="音乐">琴家</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-people="饮馔">茶人</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-people="武术">武术家</button>
-    <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium" data-people="工艺">哲匠</button>
-  </div>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="person-card rounded-r-lg p-5" data-people="绘画">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">顾恺之</h5>
-        <span class="text-xs text-gray-500">约348—409 · 东晋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">画祖 · 虎头三绝</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">提出「以形写神」「迁想妙得」，作《女史箴图》《洛神赋图》，为中国绘画理论与实践的奠基人，谢安称其「自苍生以来未之有也」。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="饮馔">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">陆羽</h5>
-        <span class="text-xs text-gray-500">733—804 · 唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">茶圣 · 茶山御史</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">著《茶经》三卷十章，系统总结茶之源、具、造、器、煮、饮，被尊为茶神、茶圣，茶道文化由此确立。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="绘画">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">吴道子</h5>
-        <span class="text-xs text-gray-500">约680—759 · 唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">画圣 · 吴带当风</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">擅佛道人物，笔势圆转、衣带飘举，世称「吴带当风」，创兰叶描，为百代画圣，民间画工尊为祖师。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="书法">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">王羲之</h5>
-        <span class="text-xs text-gray-500">303—361 · 东晋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">书圣 · 天下第一行书</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">博采众长，备精诸体，变汉魏质朴为流美妍丽，《兰亭集序》号称天下第一行书，为百代书圣。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="书法">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">孙过庭</h5>
-        <span class="text-xs text-gray-500">646—691 · 唐</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">书论宗师 · 书谱</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">著《书谱》，文辞优美、理论精微，论书学三阶段「平正—险绝—平正」，为书论千古绝唱，草书亦为唐草典范。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="绘画">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">郭熙</h5>
-        <span class="text-xs text-gray-500">约1000—1090 · 宋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">山水画大师 · 三远法</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">北宋山水画大家，《林泉高致》提出「三远法」（高远、深远、平远），创卷云皴，《早春图》为山水神品。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="音乐">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">俞伯牙</h5>
-        <span class="text-xs text-gray-500">春秋</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">琴仙 · 高山流水</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">春秋琴家，抚琴遇知音钟子期，一曲高山流水传为千古知音佳话，摔琴谢知音，为琴道精神之象征。</p>
-    </div>
-    <div class="person-card rounded-r-lg p-5" data-people="武术">
-      <div class="flex justify-between items-start mb-2">
-        <h5 class="font-serif-cn font-bold text-lg">张三丰</h5>
-        <span class="text-xs text-gray-500">传元明之际</span>
-      </div>
-      <p class="text-sm text-gray-500 mb-2">武当派祖师 · 太极宗师</p>
-      <p class="text-[15px] text-gray-700 leading-relaxed">传为武当内家拳、太极拳创始人，创以柔克刚、以静制动内家拳法，开武当一派，为内家武术之祖。</p>
-    </div>
-  </div>
-</section>
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({behavior: 'smooth'});
+        }
 
-<!-- 页脚 -->
-<footer class="border-t border-[rgba(178,34,34,0.1)] mt-12">
-  <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 text-center">
-    <div class="seal mx-auto mb-4" style="transform:rotate(0)">藏</div>
-    <p class="font-serif-cn text-lg font-bold text-[rgb(var(--brand-rgb))] mb-2">艺藏本体论</p>
-    <p class="text-sm text-gray-500">数据来源：殆知阁中国古典文献 · 艺藏446部典籍</p>
-    <p class="text-xs text-gray-400 mt-2">道进乎技 · 游于艺 · 中华技艺文明知识图谱平台</p>
-  </div>
-</footer>
+        // ===== 典籍列表渲染 =====
+        function renderCategoryTabs() {
+            const tabsContainer = document.getElementById('category-tabs');
+            tabsContainer.innerHTML = '';
+            Object.keys(booksData).forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1 rounded text-sm transition-colors ${cat === currentCategory ? 'bg-primary text-lightpaper' : 'bg-primary/20 text-primary hover:bg-primary/30'}`;
+                btn.textContent = `${cat} (${booksData[cat].length})`;
+                btn.onclick = () => {
+                    currentCategory = cat;
+                    renderCategoryTabs();
+                    renderBooksList();
+                    document.getElementById('book-reader').classList.add('hidden');
+                };
+                tabsContainer.appendChild(btn);
+            });
+        }
 
-<script>
-// 分类统计饼图
-const catChart = echarts.init(document.getElementById('categoryChart'));
-catChart.setOption({
-  tooltip: { trigger: 'item', formatter: '{b}: {c}部 ({d}%)' },
-  series: [{
-    type: 'pie',
-    radius: ['40%', '70%'],
-    center: ['50%', '55%'],
-    avoidLabelOverlap: true,
-    itemStyle: { borderRadius: 6, borderColor: '#fcf8f0', borderWidth: 2 },
-    label: { show: true, fontSize: 12 },
-    data: [
-      { value: 83, name: '绘画', itemStyle:{color:'#b22222'} },
-      { value: 75, name: '草木虫鱼', itemStyle:{color:'#6b8e23'} },
-      { value: 62, name: '饮馔', itemStyle:{color:'#cd853f'} },
-      { value: 58, name: '书法', itemStyle:{color:'#2f4f4f'} },
-      { value: 53, name: '器物', itemStyle:{color:'#4682b4'} },
-      { value: 40, name: '武术', itemStyle:{color:'#8b4513'} },
-      { value: 37, name: '音乐', itemStyle:{color:'#9370db'} },
-      { value: 15, name: '综合', itemStyle:{color:'#708090'} },
-      { value: 14, name: '篆刻', itemStyle:{color:'#b8860b'} },
-      { value: 5, name: '工艺', itemStyle:{color:'#5f9ea0'} },
-      { value: 3, name: '棋技', itemStyle:{color:'#bc8f8f'} },
-      { value: 1, name: '竞技', itemStyle:{color:'#d3d3d3'} },
-    ]
-  }]
-});
+        function renderBooksList(filterText = '') {
+            const listContainer = document.getElementById('books-list');
+            const titleEl = document.getElementById('current-category-title');
+            titleEl.textContent = `${currentCategory}（${booksData[currentCategory].length}部）`;
+            
+            listContainer.innerHTML = '';
+            const books = booksData[currentCategory].filter(b => 
+                b.title.includes(filterText) || b.author.includes(filterText)
+            );
+            
+            books.forEach((book, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-lightpaper rounded border border-secondary/20 p-4 hover:shadow-md hover:border-secondary/40 transition-all cursor-pointer';
+                card.innerHTML = `
+                    <h4 class="font-kai font-bold text-primary">${book.title}</h4>
+                    <p class="text-sm text-ink/60 mt-1">${book.dynasty} · ${book.author}</p>
+                `;
+                card.onclick = () => openBook(book);
+                listContainer.appendChild(card);
+            });
 
-// 历代分布柱状图
-const dynastyChart = echarts.init(document.getElementById('dynastyChart'));
-dynastyChart.setOption({
-  tooltip: { trigger: 'axis' },
-  grid: { left: 50, right: 20, top: 20, bottom: 40 },
-  xAxis: {
-    type: 'category',
-    data: ['先秦', '两汉', '魏晋', '南北朝', '唐', '宋', '元', '明', '清'],
-    axisLabel: { fontSize: 12 }
-  },
-  yAxis: { type: 'value', name: '部数' },
-  series: [{
-    type: 'bar',
-    data: [12, 8, 18, 15, 45, 82, 38, 112, 116],
-    itemStyle: {
-      color: new echarts.graphic.LinearGradient(0,0,0,1,[
-        {offset:0,color:'#b22222'},{offset:1,color:'rgba(178,34,34,0.3)'}
-      ]),
-      borderRadius: [4,4,0,0]
-    }
-  }]
-});
+            if (books.length === 0) {
+                listContainer.innerHTML = '<p class="col-span-full text-center text-ink/50 py-8">未找到匹配典籍</p>';
+            }
+        }
 
-// 义理关系图谱
-const graphChart = echarts.init(document.getElementById('graphChart'));
-const graphNodes = [
-  {name:'气韵生动', category:0, symbolSize:55, value:100},
-  {name:'以形写神', category:0, symbolSize:45},
-  {name:'骨法用笔', category:0, symbolSize:38},
-  {name:'意境', category:0, symbolSize:50},
-  {name:'逸品', category:0, symbolSize:35},
-  {name:'书画同源', category:0, symbolSize:40},
-  {name:'古画品录', category:1, symbolSize:40},
-  {name:'历代名画记', category:1, symbolSize:38},
-  {name:'林泉高致', category:1, symbolSize:36},
-  {name:'书谱', category:1, symbolSize:36},
-  {name:'溪山琴况', category:1, symbolSize:36},
-  {name:'茶经', category:1, symbolSize:40},
-  {name:'谢赫', category:2, symbolSize:32},
-  {name:'张彦远', category:2, symbolSize:30},
-  {name:'郭熙', category:2, symbolSize:30},
-  {name:'孙过庭', category:2, symbolSize:30},
-  {name:'徐上瀛', category:2, symbolSize:28},
-  {name:'陆羽', category:2, symbolSize:32},
-  {name:'文人画', category:3, symbolSize:45},
-  {name:'山水画', category:3, symbolSize:40},
-  {name:'古琴', category:3, symbolSize:35},
-  {name:'书法', category:3, symbolSize:40},
+        async function openBook(book) {
+            document.getElementById('reader-title').textContent = book.title;
+            document.getElementById('reader-meta').textContent = `${book.dynasty} · ${book.author}`;
+            const contentEl = document.getElementById('reader-content');
+            contentEl.innerHTML = '<p class="text-center text-ink/50 py-8"><i class="fa fa-spinner fa-spin mr-2"></i>正在加载典籍原文...</p>';
+            document.getElementById('book-reader').classList.remove('hidden');
+            document.getElementById('book-reader').scrollIntoView({behavior: 'smooth', block: 'start'});
+            
+            try {
+                const resp = await fetch(book.file);
+                let content = await resp.text();
+                content = content.trim();
+                if (!content) content = "（典籍文本整理中，敬请期待）";
+                const paragraphs = content.split(/\n+/).filter(p => p.trim());
+                contentEl.innerHTML = paragraphs.map(p => `<p class="book-content-text mb-4">${p.trim()}</p>`).join('');
+            } catch (e) {
+                contentEl.innerHTML = '<p class="text-center text-primary/70 py-8">典籍加载失败，请稍后重试</p>';
+            }
+        }
+
+        function closeReader() {
+            document.getElementById('book-reader').classList.add('hidden');
+        }
+
+        // 搜索功能
+        document.getElementById('book-search').addEventListener('input', (e) => {
+            renderBooksList(e.target.value.trim());
+        });
+
+        // ===== 图表 =====
+        function renderCharts() {
+            // 分类饼图
+            const catLabels = Object.keys(booksData);
+            const catData = catLabels.map(c => booksData[c].length);
+            new Chart(document.getElementById('categoryChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{
+                        data: catData,
+                        backgroundColor: [
+                            '#8B2323', '#A0522D', '#B8860B', '#D4AF37',
+                            '#CD853F', '#D2691E', '#BC8F8F', '#F4A460',
+                            '#DEB887', '#D2B48C', '#F5DEB3', '#8B7355'
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#FAF7F0'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {position: 'right', labels: {font: {family: '"Noto Serif SC", serif'}}}}
+                }
+            });
+
+            // 朝代柱状图
+            const dynasties = ['先秦', '两汉', '魏晋南北朝', '隋唐', '宋', '元', '明', '清'];
+            const dynastyCounts = [5, 12, 28, 35, 86, 22, 115, 143];
+            new Chart(document.getElementById('dynastyChart'), {
+                type: 'bar',
+                data: {
+                    labels: dynasties,
+                    datasets: [{
+                        label: '艺典数量',
+                        data: dynastyCounts,
+                        backgroundColor: '#8B2323',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {legend: {display: false}},
+                    scales: {y: {beginAtZero: true}}
+                }
+            });
+        }
+
+        // ===== D3力导向图谱 =====
+        function renderGraph() {
+            const container = document.getElementById('graph-container');
+            const width = container.clientWidth;
+            const height = 500;
+
+            const nodes = [
+                // 核心概念
+                {id: '气韵', group: 'concept', size: 15},
+                {id: '意境', group: 'concept', size: 15},
+                {id: '神品', group: 'concept', size: 12},
+                {id: '妙品', group: 'concept', size: 10},
+                {id: '能品', group: 'concept', size: 10},
+                {id: '逸品', group: 'concept', size: 12},
+                {id: '笔法', group: 'concept', size: 10},
+                {id: '墨法', group: 'concept', size: 10},
+                {id: '律吕', group: 'concept', size: 8},
+                {id: '心法', group: 'concept', size: 10},
+                // 典籍
+                {id: '古画品录', group: 'book', size: 10},
+                {id: '历代名画记', group: 'book', size: 10},
+                {id: '林泉高致', group: 'book', size: 10},
+                {id: '书谱', group: 'book', size: 10},
+                {id: '溪山琴况', group: 'book', size: 10},
+                {id: '茶经', group: 'book', size: 10},
+                {id: '棋经十三篇', group: 'book', size: 8},
+                {id: '太极拳论', group: 'book', size: 8},
+                {id: '考工记', group: 'book', size: 8},
+                {id: '长物志', group: 'book', size: 8},
+                // 人物
+                {id: '谢赫', group: 'master', size: 8},
+                {id: '张彦远', group: 'master', size: 8},
+                {id: '郭熙', group: 'master', size: 8},
+                {id: '孙过庭', group: 'master', size: 8},
+                {id: '徐上瀛', group: 'master', size: 8},
+                {id: '陆羽', group: 'master', size: 8},
+                {id: '顾恺之', group: 'master', size: 10},
+                {id: '王羲之', group: 'master', size: 10},
+                {id: '吴道子', group: 'master', size: 10},
+                // 流派
+                {id: '南宗画', group: 'school', size: 10},
+                {id: '北宗画', group: 'school', size: 10},
+                {id: '虞山琴派', group: 'school', size: 8},
+                {id: '内家拳', group: 'school', size: 10},
+                {id: '外家拳', group: 'school', size: 10},
+                {id: '碑学', group: 'school', size: 8},
+                {id: '帖学', group: 'school', size: 8},
+            ];
+
+            const links = [
+                {source: '气韵', target: '古画品录', value: 3},
+                {source: '气韵', target: '意境', value: 2},
+                {source: '古画品录', target: '谢赫', value: 3},
+                {source: '六法', target: '谢赫', value: 3},
+                {source: '历代名画记', target: '张彦远', value: 3},
+                {source: '林泉高致', target: '郭熙', value: 3},
+                {source: '林泉高致', target: '三远', value: 2},
+                {source: '书谱', target: '孙过庭', value: 3},
+                {source: '书谱', target: '笔法', value: 2},
+                {source: '溪山琴况', target: '徐上瀛', value: 3},
+                {source: '溪山琴况', target: '律吕', value: 2},
+                {source: '茶经', target: '陆羽', value: 3},
+                {source: '气韵', target: '神品', value: 2},
+                {source: '气韵', target: '逸品', value: 2},
+                {source: '南宗画', target: '文人画', value: 2},
+                {source: '南宗画', target: '王维', value: 2},
+                {source: '北宗画', target: '李思训', value: 2},
+                {source: '内家拳', target: '太极拳', value: 2},
+                {source: '内家拳', target: '心法', value: 2},
+                {source: '笔法', target: '王羲之', value: 2},
+                {source: '吴道子', target: '北宗画', value: 2},
+                {source: '顾恺之', target: '传神', value: 2},
+                {source: '意境', target: '逸品', value: 2},
+            ];
+
+            // 修正links，确保source/target存在
+            const nodeIds = new Set(nodes.map(n => n.id));
+            const validLinks = links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
+
+            const svg = d3.select('#graph-container').append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .call(d3.zoom().on('zoom', (e) => g.attr('transform', e.transform)));
+
+            const g = svg.append('g');
+
+            const colorMap = {
+                concept: '#8B2323',
+                book: '#D4AF37',
+                master: '#556B2F',
+                school: '#4682B4'
+            };
+
+            const simulation = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(validLinks).id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width/2, height/2));
+
+            const link = g.append('g')
+                .selectAll('line')
+                .data(validLinks)
+                .join('line')
+                .attr('stroke', '#999')
+                .attr('stroke-opacity', 0.6)
+                .attr('stroke-width', d => Math.sqrt(d.value));
+
+            const node = g.append('g')
+                .selectAll('circle')
+                .data(nodes)
+                .join('circle')
+                .attr('r', d => d.size)
+                .attr('fill', d => colorMap[d.group])
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            const label = g.append('g')
+                .selectAll('text')
+                .data(nodes)
+                .join('text')
+                .text(d => d.id)
+                .attr('font-size', 12)
+                .attr('dx', 12)
+                .attr('dy', 4)
+                .attr('font-family', '"Noto Serif SC", serif')
+                .style('pointer-events', 'none');
+
+            node.append('title').text(d => d.id);
+
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                node
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+                label
+                    .attr('x', d => d.x)
+                    .attr('y', d => d.y);
+            });
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            // 复选框过滤
+            function updateGraph() {
+                const showConcepts = document.getElementById('show-concepts').checked;
+                const showBooks = document.getElementById('show-books').checked;
+                const showMasters = document.getElementById('show-masters').checked;
+                const showSchools = document.getElementById('show-schools').checked;
+                
+                node.style('display', d => {
+                    if (d.group === 'concept' && !showConcepts) return 'none';
+                    if (d.group === 'book' && !showBooks) return 'none';
+                    if (d.group === 'master' && !showMasters) return 'none';
+                    if (d.group === 'school' && !showSchools) return 'none';
+                    return 'block';
+                });
+                label.style('display', d => {
+                    if (d.group === 'concept' && !showConcepts) return 'none';
+                    if (d.group === 'book' && !showBooks) return 'none';
+                    if (d.group === 'master' && !showMasters) return 'none';
+                    if (d.group === 'school' && !showSchools) return 'none';
+                    return 'block';
+                });
+            }
+
+            ['show-concepts', 'show-books', 'show-masters', 'show-schools'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateGraph);
+            });
+        }
+
+        // ===== 时间轴 =====
+        function renderTimeline() {
+            const timelineData = [
+                {dynasty: '先秦', title: '考工记', desc: '中国最早的工艺技术典籍，记录百工技艺制度与规范'},
+                {dynasty: '东晋', title: '顾恺之《论画》', desc: '提出"以形写神""迁想妙得"，奠定中国画论基础'},
+                {dynasty: '南齐', title: '谢赫《古画品录》', desc: '提出"六法论"，成为千年绘画品评标准'},
+                {dynasty: '唐', title: '孙过庭《书谱》', desc: '书法理论巨著，论述书法技法与美学思想'},
+                {dynasty: '唐', title: '张彦远《历代名画记》', desc: '中国第一部绘画通史，画史之祖'},
+                {dynasty: '唐', title: '陆羽《茶经》', desc: '世界第一部茶学专著，茶文化奠基之作'},
+                {dynasty: '五代', title: '荆浩《笔法记》', desc: '提出山水画"六要"，水墨山水理论成熟'},
+                {dynasty: '宋', title: '郭熙《林泉高致》', desc: '提出"三远法"，山水画创作与鉴赏体系完整建立'},
+                {dynasty: '宋', title: '宋徽宗《大观茶论》', desc: '宋代点茶艺术的理论总结，饮茶美学鼎盛标志'},
+                {dynasty: '明', title: '徐上瀛《溪山琴况》', desc: '古琴美学集大成，提出"二十四况"琴学体系'},
+                {dynasty: '明', title: '文震亨《长物志》', desc: '晚明文人生活美学百科，器物审美与雅文化总结'},
+                {dynasty: '清', title: '王宗岳《太极拳论》', desc: '太极拳理论奠基，武术内家拳体系成熟标志'},
+            ];
+
+            const container = document.querySelector('#timeline > div');
+            container.innerHTML = timelineData.map(item => `
+                <div class="mb-8 relative">
+                    <div class="absolute -left-10 w-4 h-4 rounded-full bg-secondary border-4 border-paper"></div>
+                    <span class="text-sm text-primary/70 font-bold">${item.dynasty}</span>
+                    <h4 class="font-kai font-bold text-lg text-primary mt-1">${item.title}</h4>
+                    <p class="text-ink/70 mt-1">${item.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        // ===== 美学本体Tab =====
+        const aestheticsData = {
+            'liu-fa': `
+                <h3 class="font-kai font-bold text-xl text-primary mb-4">谢赫六法 · 绘画品评根本体系</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">一、气韵生动</h4>
+                        <p class="text-sm text-ink/70 mt-1">绘画最高标准，作品整体精神气质与生命活力的体现，是六法之本。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">二、骨法用笔</h4>
+                        <p class="text-sm text-ink/70 mt-1">通过笔墨线条表现对象的骨体相貌，是中国画笔墨技法核心。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">三、应物象形</h4>
+                        <p class="text-sm text-ink/70 mt-1">准确描绘对象的外形特征，造型基础要求。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">四、随类赋彩</h4>
+                        <p class="text-sm text-ink/70 mt-1">根据不同对象类别施加相应色彩，色彩运用原则。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">五、经营位置</h4>
+                        <p class="text-sm text-ink/70 mt-1">构图布局安排，画面章法与空间组织。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">六、传移摹写</h4>
+                        <p class="text-sm text-ink/70 mt-1">临摹学习前人作品，继承传统技法的基本途径。</p>
+                    </div>
+                </div>
+            `,
+            'qin-kuang': `
+                <h3 class="font-kai font-bold text-xl text-primary mb-4">溪山琴况 · 古琴二十四况美学体系</h3>
+                <p class="text-ink/70 mb-4">明代徐上瀛所著《溪山琴况》，将古琴审美归纳为二十四况，是中国音乐美学的巅峰之作：</p>
+                <div class="grid grid-cols-4 md:grid-cols-6 gap-2">
+                    ${['和','静','清','远','古','淡','恬','逸','雅','丽','亮','采','洁','润','圆','坚','宏','细','溜','健','轻','重','迟','速'].map(k => `
+                        <div class="p-2 bg-paper/70 rounded text-center font-kai text-primary font-bold">${k}</div>
+                    `).join('')}
+                </div>
+                <p class="text-ink/70 mt-4">以"和"为根本，追求"淡和"审美理想，是儒道释思想在音乐艺术中的完美融合。</p>
+            `,
+            'shu-pin': `
+                <h3 class="font-kai font-bold text-xl text-primary mb-4">书品三品 · 书法艺术品评体系</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-paper/70 rounded border-l-4 border-secondary">
+                        <h4 class="font-bold text-primary text-lg">神品</h4>
+                        <p class="text-sm text-ink/70 mt-2">技艺炉火纯青，浑然天成，妙合自然，笔墨与精神高度统一，不可多得的顶级作品。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded border-l-4 border-primary/60">
+                        <h4 class="font-bold text-primary text-lg">妙品</h4>
+                        <p class="text-sm text-ink/70 mt-2">笔墨精到，法度娴熟，意趣盎然，艺术功力深厚，独具匠心之作。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded border-l-4 border-primary/30">
+                        <h4 class="font-bold text-primary text-lg">能品</h4>
+                        <p class="text-sm text-ink/70 mt-2">技法精能，形象准确，法度严谨，技法功底扎实，达到较高艺术水准。</p>
+                    </div>
+                </div>
+                <p class="text-ink/70 mt-4">后世又增"逸品"置于三品之上，代表不拘常法、出于意表的文人写意最高境界。</p>
+            `,
+            'san-yuan': `
+                <h3 class="font-kai font-bold text-xl text-primary mb-4">山水三远法 · 山水画空间构图体系</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">高远</h4>
+                        <p class="text-sm text-ink/70 mt-1">自山下而仰山巅，表现山势的高耸雄伟，如范宽《溪山行旅图》。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">深远</h4>
+                        <p class="text-sm text-ink/70 mt-1">自山前而窥山后，表现山峦的层叠纵深，意境幽深曲折。</p>
+                    </div>
+                    <div class="p-4 bg-paper/70 rounded">
+                        <h4 class="font-bold text-primary">平远</h4>
+                        <p class="text-sm text-ink/70 mt-1">自近山而望远山，表现平阔开阔的江湖景色，冲融缥缈，最合文人意境。</p>
+                    </div>
+                </div>
+                <p class="text-ink/70 mt-4">三远法由北宋郭熙在《林泉高致》中提出，完整建立了中国山水画的空间表现体系，成为后世山水画创作的基本法则。</p>
+            `
+        };
+
+        function renderAesthetics() {
+            document.getElementById('aesthetics-content').innerHTML = aestheticsData[currentAestheticTab];
+            
+            document.querySelectorAll('.aesthetic-tab').forEach(btn => {
+                btn.onclick = () => {
+                    currentAestheticTab = btn.dataset.tab;
+                    document.querySelectorAll('.aesthetic-tab').forEach(b => {
+                        b.classList.remove('active', 'bg-primary', 'text-lightpaper');
+                        b.classList.add('bg-primary/20', 'text-primary', 'hover:bg-primary/30');
+                    });
+                    btn.classList.add('active', 'bg-primary', 'text-lightpaper');
+                    btn.classList.remove('bg-primary/20', 'text-primary', 'hover:bg-primary/30');
+                    renderAesthetics();
+                };
+            });
+        }
+
+        // ===== 流派对比器 =====
+        const compareData = {
+            'nan-bei': `
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">南宗画</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">始祖：</span>王维（唐代诗人画家）</li>
+                        <li><span class="font-bold">风格：</span>水墨渲淡，文人写意，重笔墨情趣与意境表达</li>
+                        <li><span class="font-bold">技法：</span>多用披麻皴，柔性线条，墨色层次丰富</li>
+                        <li><span class="font-bold">代表：</span>王维、董源、巨然、元四家、文徵明、沈周</li>
+                        <li><span class="font-bold">审美：</span>逸气、书卷气、平淡天真，为文人画正统</li>
+                    </ul>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">北宗画</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">始祖：</span>李思训父子（唐代青绿山水画家）</li>
+                        <li><span class="font-bold">风格：</span>青绿重彩，工整精细，写实刻画，注重法度功力</li>
+                        <li><span class="font-bold">技法：</span>多用斧劈皴，刚性线条，设色浓丽，构图严谨</li>
+                        <li><span class="font-bold">代表：</span>李思训、李昭道、马远、夏圭、戴进、吴伟</li>
+                        <li><span class="font-bold">审美：</span>刚劲雄健，气势逼人，为院体画主流</li>
+                    </ul>
+                </div>
+            `,
+            'nei-wai': `
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">内家拳</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">代表：</span>太极拳、形意拳、八卦掌</li>
+                        <li><span class="font-bold">核心：</span>以静制动，以柔克刚，以意领气，重内功修炼</li>
+                        <li><span class="font-bold">技法：</span>动作舒缓圆活，后发先至，四两拨千斤，刚柔并济</li>
+                        <li><span class="font-bold">理论：</span>融合道家阴阳、中医经络、易学思想</li>
+                        <li><span class="font-bold">代表人物：</span>张三丰、王宗岳、杨露禅、孙禄堂</li>
+                    </ul>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">外家拳</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">代表：</span>少林拳、长拳、洪拳、南拳</li>
+                        <li><span class="font-bold">核心：</span>以动制静，以刚克柔，先下手为强，重筋骨皮外功</li>
+                        <li><span class="font-bold">技法：</span>动作刚劲迅猛，蹿蹦跳跃，拳脚有力，硬打硬进</li>
+                        <li><span class="font-bold">理论：</span>注重攻防实战，招式明了，筋骨锻炼为先</li>
+                        <li><span class="font-bold">代表：</span>少林派、洪熙官、黄飞鸿等少林武术体系</li>
+                    </ul>
+                </div>
+            `,
+            'qin-pai': `
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">虞山派</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">发源地：</span>江苏常熟虞山</li>
+                        <li><span class="font-bold">创始人：</span>严澂（天池）</li>
+                        <li><span class="font-bold">风格：</span>清微淡远，中正平和，追求"琴之为器，焚香静对"的文人雅趣</li>
+                        <li><span class="font-bold">主张：</span>黜俗归雅，反对繁声促节，追求古淡天成的音乐境界</li>
+                        <li><span class="font-bold">地位：</span>明清之际最有影响的琴派，被视为琴学正宗</li>
+                    </ul>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">广陵派</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">发源地：</span>江苏扬州（古称广陵）</li>
+                        <li><span class="font-bold">创始人：</span>徐常遇</li>
+                        <li><span class="font-bold">风格：</span>跌宕起伏，细腻自由，刚柔相济，音韵并茂</li>
+                        <li><span class="font-bold">特色：</span>讲究"瞬有迟速，境有虚实"，善于表现丰富情感变化</li>
+                        <li><span class="font-bold">代表曲：</span>《广陵散》《龙翔操》《樵歌》等名曲传承</li>
+                    </ul>
+                </div>
+            `,
+            'bei-tie': `
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">碑学</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">兴盛：</span>清代中后期，阮元、包世臣、康有为倡导</li>
+                        <li><span class="font-bold">取法：</span>汉魏南北朝碑刻、金文、石鼓文、篆隶北碑</li>
+                        <li><span class="font-bold">风格：</span>雄强朴茂，方整刚劲，气势浑厚，古拙有金石气</li>
+                        <li><span class="font-bold">代表：</span>邓石如、伊秉绶、何绍基、赵之谦、吴昌硕、康有为</li>
+                        <li><span class="font-bold">主张：</span>尊碑卑唐，追求质朴刚健的壮美风格，救帖学靡弱之弊</li>
+                    </ul>
+                </div>
+                <div class="bg-lightpaper rounded-lg p-6 border border-secondary/20">
+                    <h3 class="font-kai font-bold text-xl text-primary mb-4">帖学</h3>
+                    <ul class="space-y-2 text-ink/80 text-sm">
+                        <li><span class="font-bold">传承：</span>魏晋以来二王体系，唐宋元明主流书风</li>
+                        <li><span class="font-bold">取法：</span>魏晋尺牍、法帖、二王行草、唐宋名家墨迹</li>
+                        <li><span class="font-bold">风格：</span>流美婉转，潇洒秀逸，法度严谨，书卷气浓厚</li>
+                        <li><span class="font-bold">代表：</span>王羲之、王献之、虞世南、褚遂良、赵孟頫、董其昌</li>
+                        <li><span class="font-bold">特色：</span>注重笔法传承，讲究流美自然，为书法正脉千年传承</li>
+                    </ul>
+                </div>
+            `
+        };
+
+        function renderCompare() {
+            document.getElementById('compare-content').innerHTML = compareData[currentCompareTab];
+            
+            document.querySelectorAll('.compare-tab').forEach(btn => {
+                btn.onclick = () => {
+                    currentCompareTab = btn.dataset.tab;
+                    document.querySelectorAll('.compare-tab').forEach(b => {
+                        b.classList.remove('active', 'bg-primary', 'text-lightpaper');
+                        b.classList.add('bg-primary/20', 'text-primary', 'hover:bg-primary/30');
+                    });
+                    btn.classList.add('active', 'bg-primary', 'text-lightpaper');
+                    btn.classList.remove('bg-primary/20', 'text-primary', 'hover:bg-primary/30');
+                    renderCompare();
+                };
+            });
+        }
+
+        // ===== 概念推演 =====
+        function deducePath() {
+            const start = document.getElementById('deduce-start').value.trim();
+            const end = document.getElementById('deduce-end').value.trim();
+            const resultEl = document.getElementById('deduce-result');
+            
+            if (!start || !end) {
+                resultEl.innerHTML = '<p class="text-primary/70">请输入起始概念和目标概念</p>';
+                return;
+            }
+
+            // 艺理概念关联网络，简化版路径推导
+            const conceptRelations = {
+                '气韵': ['神', '生动', '骨法', '意境', '谢赫六法'],
+                '骨法': ['用笔', '笔法', '气韵', '书法'],
+                '笔法': ['骨法', '中锋', '永字八法', '书谱', '王羲之'],
+                '意境': ['气韵', '逸品', '境界', '诗画一律', '文人画'],
+                '逸品': ['意境', '文人画', '南宗', '写意', '平淡天真'],
+                '神品': ['气韵', '自然', '炉火纯青', '妙品'],
+                '六法': ['气韵', '骨法', '应物', '赋彩', '位置', '传移', '谢赫'],
+                '三远': ['高远', '深远', '平远', '郭熙', '林泉高致', '山水画'],
+                '和': ['溪山琴况', '中正', '平和', '古琴', '儒道'],
+                '淡': ['和', '文人审美', '南宗', '虞山琴派', '自然'],
+                '太极拳': ['内家拳', '以柔克刚', '阴阳', '王宗岳', '心法'],
+                '内家拳': ['太极拳', '形意', '八卦', '以静制动', '心法'],
+                '南宗': ['王维', '文人画', '水墨', '写意', '逸品', '董其昌'],
+                '北宗': ['李思训', '青绿山水', '院体', '斧劈皴', '工笔'],
+                '碑学': ['北碑', '金石气', '篆隶', '康有为', '雄强'],
+                '帖学': ['二王', '行草', '流美', '赵孟頫', '董其昌'],
+            };
+
+            // BFS找路径
+            function findPath(s, t) {
+                if (s === t) return [s];
+                const visited = new Set();
+                const queue = [[s]];
+                while (queue.length > 0) {
+                    const path = queue.shift();
+                    const node = path[path.length - 1];
+                    if (visited.has(node)) continue;
+                    visited.add(node);
+                    const neighbors = conceptRelations[node] || [];
+                    for (const n of neighbors) {
+                        const newPath = [...path, n];
+                        if (n === t) return newPath;
+                        queue.push(newPath);
+                    }
+                }
+                return null;
+            }
+
+            const path = findPath(start, end);
+            if (path) {
+                let html = `<p class="mb-3"><span class="font-bold text-primary">关联路径：</span>${path.join(' → ')}</p>`;
+                html += '<div class="space-y-2 text-sm text-ink/80">';
+                html += '<p class="font-bold text-primary mt-2">义理解释：</p>';
+                html += `<p>从「${start}」到「${end}」的艺理关联，体现了中华传统技艺中道与技、形与神、法与意的统一。</p>`;
+                if (path.length > 2) {
+                    html += '<ul class="list-disc pl-5 mt-2 space-y-1">';
+                    for (let i = 0; i < path.length - 1; i++) {
+                        html += `<li><span class="font-bold">${path[i]}</span> 与 <span class="font-bold">${path[i+1]}</span>：二者在艺理上直接关联，${path[i]}通过技法、审美或哲学传承与${path[i+1]}形成内在脉络。</li>`;
+                    }
+                    html += '</ul>';
+                }
+                html += '</div>';
+                resultEl.innerHTML = html;
+            } else {
+                resultEl.innerHTML = `<p class="text-primary/70">暂未找到「${start}」到「${end}」的直接关联路径，可尝试输入气韵、意境、笔法、南宗、内家拳、三远、和、碑学等核心艺理概念。</p>`;
+            }
+        }
+
+        // ===== 匠师名录 =====
+        const mastersData = {
+            'painter': [
+                {name: '顾恺之', dynasty: '东晋', desc: '提出"以形写神"，人物画鼻祖，《女史箴图》《洛神赋图》'},
+                {name: '谢赫', dynasty: '南齐', desc: '著《古画品录》，提出六法论，为千年画论之宗'},
+                {name: '吴道子', dynasty: '唐', desc: '画圣，吴带当风，人物画与山水画集大成者'},
+                {name: '王维', dynasty: '唐', desc: '南宗画之祖，诗中有画，画中有诗，文人画开创者'},
+                {name: '荆浩', dynasty: '五代', desc: '著《笔法记》，北方山水画派奠基者'},
+                {name: '郭熙', dynasty: '宋', desc: '著《林泉高致》，提出三远法，北宋山水大家'},
+                {name: '苏轼', dynasty: '宋', desc: '文人画理论倡导者，提出"诗画本一律"'},
+                {name: '米芾', dynasty: '宋', desc: '米点山水，文人墨戏，书画皆精'},
+                {name: '赵孟頫', dynasty: '元', desc: '元代画坛领袖，书画同源倡导者，元四家先驱'},
+                {name: '黄公望', dynasty: '元', desc: '元四家之首，《富春山居图》为山水画第一神品'},
+                {name: '倪瓒', dynasty: '元', desc: '元四家之一，逸笔草草，聊写胸中逸气，文人画极致'},
+                {name: '董其昌', dynasty: '明', desc: '提出南北宗论，晚明画坛盟主，影响后世三百年'},
+                {name: '石涛', dynasty: '清', desc: '著《苦瓜和尚画语录》，搜尽奇峰打草稿，革新派代表'},
+                {name: '八大山人', dynasty: '清', desc: '写意花鸟巅峰，笔墨简练，孤傲冷峻，遗民画家代表'},
+            ],
+            'calligrapher': [
+                {name: '王羲之', dynasty: '东晋', desc: '书圣，《兰亭序》天下第一行书，书法史上千古一人'},
+                {name: '王献之', dynasty: '东晋', desc: '小王，行书草书俱佳，与父并称"二王"'},
+                {name: '欧阳询', dynasty: '唐', desc: '初唐四家，欧体楷书严谨险劲，《九成宫醴泉铭》'},
+                {name: '虞世南', dynasty: '唐', desc: '初唐四家，书法君子，中正平和，得二王正脉'},
+                {name: '褚遂良', dynasty: '唐', desc: '初唐四家，唐楷广大教化主，《雁塔圣教序》'},
+                {name: '颜真卿', dynasty: '唐', desc: '颜体楷书雄浑大气，《祭侄文稿》天下第二行书'},
+                {name: '柳公权', dynasty: '唐', desc: '柳体楷书骨力劲健，与颜真卿并称"颜筋柳骨"'},
+                {name: '张旭', dynasty: '唐', desc: '草圣，狂草奔放，《古诗四帖》'},
+                {name: '怀素', dynasty: '唐', desc: '狂草大家，《自叙帖》，以狂继颠，与张旭并称"颠张醉素"'},
+                {name: '孙过庭', dynasty: '唐', desc: '著《书谱》，书法理论与草书艺术双绝'},
+                {name: '苏轼', dynasty: '宋', desc: '宋四家之首，《黄州寒食帖》天下第三行书'},
+                {name: '黄庭坚', dynasty: '宋', desc: '宋四家，草书长枪大戟，行书辐射式结构独特'},
+                {name: '米芾', dynasty: '宋', desc: '宋四家，刷字，八面出锋，行书风樯阵马'},
+                {name: '赵孟頫', dynasty: '元', desc: '元代书坛领袖，复古二王，赵体流美秀雅，影响至今'},
+                {name: '董其昌', dynasty: '明', desc: '晚明书坛盟主，淡远书法审美倡导者'},
+                {name: '王铎', dynasty: '清', desc: '明末清初草书大家，涨墨法，笔力千钧'},
+                {name: '邓石如', dynasty: '清', desc: '碑学开山，篆隶大家，四体皆精，清代书法第一人'},
+            ],
+            'musician': [
+                {name: '俞伯牙', dynasty: '先秦', desc: '春秋琴师，高山流水遇知音，琴道始祖'},
+                {name: '嵇康', dynasty: '魏晋', desc: '竹林七贤，著《声无哀乐论》，临刑弹《广陵散》'},
+                {name: '蔡邕', dynasty: '东汉', desc: '著《琴操》，焦尾琴制作者，琴学奠基人'},
+                {name: '严澂', dynasty: '明', desc: '虞山琴派创始人，琴学"清微淡远"审美倡导者'},
+                {name: '徐上瀛', dynasty: '明', desc: '著《溪山琴况》，古琴二十四况美学体系集大成者'},
+                {name: '徐常遇', dynasty: '清', desc: '广陵琴派创始人，《澄鉴堂琴谱》编者'},
+                {name: '张孔山', dynasty: '清', desc: '川派琴家，《流水》七十二滚拂指法创作者'},
+            ],
+            'tea': [
+                {name: '陆羽', dynasty: '唐', desc: '茶圣，著《茶经》，世界第一部茶学专著，茶文化奠基人'},
+                {name: '卢仝', dynasty: '唐', desc: '茶仙，《七碗茶歌》流传千古，饮茶精神境界极致表达'},
+                {name: '蔡襄', dynasty: '宋', desc: '著《茶录》，宋代点茶艺术推动者，书法"宋四家"之一'},
+                {name: '宋徽宗', dynasty: '宋', desc: '著《大观茶论》，宋代点茶美学与茶文化鼎盛时期代表'},
+                {name: '朱权', dynasty: '明', desc: '著《茶谱》，废除团茶提倡散茶，开创明代清饮之风'},
+                {name: '许次纾', dynasty: '明', desc: '著《茶疏》，明代茶艺理论集大成者'},
+            ],
+            'wushu': [
+                {name: '张三丰', dynasty: '元明', desc: '武当派创始人，内家拳始祖，太极拳传说创始人'},
+                {name: '王宗岳', dynasty: '清', desc: '著《太极拳论》，太极拳理论奠基人，内家拳理论集大成者'},
+                {name: '杨露禅', dynasty: '清', desc: '杨式太极拳创始人，杨无敌，将太极拳推广至全国'},
+                {name: '孙禄堂', dynasty: '民国', desc: '孙式太极拳创始人，武圣，形意八卦太极三门融通'},
+                {name: '董海川', dynasty: '清', desc: '八卦掌创始人，转掌游身，内家拳三大宗师之一'},
+                {name: '郭云深', dynasty: '清', desc: '形意拳大师，半步崩拳打天下，形意拳代表人物'},
+                {name: '戚继光', dynasty: '明', desc: '著《纪效新书》，武术系统化整理者，抗倭名将'},
+                {name: '黄百家', dynasty: '清', desc: '著《内家拳法》，最早系统记载内家拳术的文献'},
+            ]
+        };
+
+        function renderMasters() {
+            const container = document.getElementById('masters-list');
+            const masters = mastersData[currentMasterCat];
+            container.innerHTML = masters.map(m => `
+                <div class="bg-lightpaper rounded p-4 border border-secondary/20 hover:shadow-md transition-shadow">
+                    <div class="flex items-start gap-3">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-kai font-bold text-xl">${m.name.charAt(0)}</div>
+                        <div>
+                            <h4 class="font-kai font-bold text-primary">${m.name}</h4>
+                            <p class="text-xs text-primary/60 mt-0.5">${m.dynasty}</p>
+                            <p class="text-sm text-ink/70 mt-1">${m.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.master-tab').forEach(btn => {
+                btn.onclick = () => {
+                    currentMasterCat = btn.dataset.cat;
+                    document.querySelectorAll('.master-tab').forEach(b => {
+                        b.classList.remove('active', 'bg-primary', 'text-lightpaper');
+                        b.classList.add('bg-primary/20', 'text-primary', 'hover:bg-primary/30');
+                    });
+                    btn.classList.add('active', 'bg-primary', 'text-lightpaper');
+                    btn.classList.remove('bg-primary/20', 'text-primary', 'hover:bg-primary/30');
+                    renderMasters();
+                };
+            });
+        }
+
+        // ===== 初始化 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryTabs();
+            renderBooksList();
+            renderCharts();
+            setTimeout(renderGraph, 100);
+            renderTimeline();
+            renderAesthetics();
+            renderCompare();
+            renderMasters();
+        });
+
+        // ===== 全局时空宇宙 =====
+        (function(){
+// 人物数据：128位历代文艺人物
+const allPeople = [
+// 诗人40位
+{name:'屈原',type:'诗人',birth:-340,death:-278,era:'战国',tags:'楚辞之祖',desc:'战国楚国诗人，创立楚辞文体，《离骚》《九歌》《天问》作者，中国浪漫主义文学奠基人，“骚体”开创者。',works:'离骚、九歌、天问'},
+{name:'曹操',type:'诗人',birth:155,death:220,era:'东汉',tags:'建安风骨',desc:'东汉末年政治家、军事家、诗人，建安文学开创者，诗风苍凉雄浑，《短歌行》《观沧海》《龟虽寿》传世。',works:'短歌行、观沧海、龟虽寿'},
+{name:'陶渊明',type:'诗人',birth:365,death:427,era:'东晋',tags:'田园诗祖',desc:'东晋诗人，田园诗派开创者，字元亮号五柳先生，“不为五斗米折腰”，《桃花源记》《归去来兮辞》《饮酒》传世。',works:'桃花源记、归去来兮辞、饮酒'},
+{name:'谢灵运',type:'诗人',birth:385,death:433,era:'东晋',tags:'山水诗祖',desc:'东晋诗人，山水诗派开创者，中国文学史上第一位大量创作山水诗的诗人，“才高八斗”典故出处。',works:'登池上楼、山居赋'},
+{name:'王勃',type:'诗人',birth:650,death:676,era:'初唐',tags:'初唐四杰',desc:'初唐四杰之首，《滕王阁序》作者，“海内存知己，天涯若比邻”千古名句。',works:'滕王阁序、送杜少府之任蜀州'},
+{name:'陈子昂',type:'诗人',birth:659,death:700,era:'初唐',tags:'诗骨',desc:'初唐诗文革新人物，《登幽州台歌》“前不见古人，后不见来者”千古绝唱。',works:'登幽州台歌、感遇诗'},
+{name:'贺知章',type:'诗人',birth:659,death:744,era:'盛唐',tags:'诗狂',desc:'盛唐诗人、书法家，自号四明狂客，“少小离家老大回”《回乡偶书》、《咏柳》脍炙人口。',works:'回乡偶书、咏柳'},
+{name:'王维',type:'诗人',birth:701,death:761,era:'盛唐',tags:'诗佛',desc:'盛唐山水田园派诗人，字摩诘号摩诘居士，人称“诗佛”，诗书画乐俱佳，“诗中有画，画中有诗”，《山居秋暝》《送元二使安西》传世。',works:'山居秋暝、送元二使安西、鹿柴'},
+{name:'李白',type:'诗人',birth:701,death:762,era:'盛唐',tags:'诗仙',desc:'盛唐浪漫主义诗人，字太白号青莲居士，人称“诗仙”，豪放飘逸想象瑰丽，《将进酒》《蜀道难》《静夜思》等千首传世。',works:'将进酒、蜀道难、静夜思、早发白帝城'},
+{name:'杜甫',type:'诗人',birth:712,death:770,era:'盛唐',tags:'诗圣',desc:'盛唐现实主义诗人，字子美号少陵野老，人称“诗圣”，诗史，沉郁顿挫忧国忧民，三吏三别、《春望》《登高》传世。',works:'春望、登高、三吏三别'},
+{name:'孟浩然',type:'诗人',birth:689,death:740,era:'盛唐',tags:'山水田园',desc:'盛唐山水田园派诗人，与王维并称“王孟”，《春晓》《过故人庄》《宿建德江》自然天成。',works:'春晓、过故人庄、宿建德江'},
+{name:'王昌龄',type:'诗人',birth:698,death:757,era:'盛唐',tags:'七绝圣手',desc:'盛唐边塞诗人，擅长七绝，“秦时明月汉时关”《出塞》被誉为唐人七绝压卷之作。',works:'出塞、从军行、芙蓉楼送辛渐'},
+{name:'高适',type:'诗人',birth:704,death:765,era:'盛唐',tags:'边塞诗人',desc:'盛唐边塞诗派代表，与岑参并称“高岑”，《燕歌行》气势雄浑。',works:'燕歌行、别董大'},
+{name:'岑参',type:'诗人',birth:715,death:770,era:'盛唐',tags:'边塞诗人',desc:'盛唐边塞诗人，《白雪歌送武判官归京》“忽如一夜春风来，千树万树梨花开”千古名句。',works:'白雪歌送武判官归京'},
+{name:'白居易',type:'诗人',birth:772,death:846,era:'中唐',tags:'诗魔',desc:'中唐新乐府运动领袖，字乐天号香山居士，主张“文章合为时而著，歌诗合为事而作”，《长恨歌》《琵琶行》《钱塘湖春行》平易通俗。',works:'长恨歌、琵琶行、钱塘湖春行'},
+{name:'韩愈',type:'诗人',birth:768,death:824,era:'中唐',tags:'文起八代之衰',desc:'中唐文学家、思想家，古文运动领袖，唐宋八大家之首，“文起八代之衰”，以文为诗，奇崛险怪。',works:'师说、马说、左迁至蓝关示侄孙湘'},
+{name:'柳宗元',type:'诗人',birth:773,death:819,era:'中唐',tags:'唐宋八大家',desc:'中唐文学家，唐宋八大家之一，山水游记宗师，《永州八记》《江雪》“孤舟蓑笠翁，独钓寒江雪”。',works:'江雪、永州八记、捕蛇者说'},
+{name:'刘禹锡',type:'诗人',birth:772,death:842,era:'中唐',tags:'诗豪',desc:'中唐诗人，人称“诗豪”，“沉舟侧畔千帆过，病树前头万木春”，《陋室铭》家喻户晓。',works:'陋室铭、酬乐天扬州初逢席上见赠、乌衣巷'},
+{name:'李贺',type:'诗人',birth:790,death:816,era:'中唐',tags:'诗鬼',desc:'中唐诗人，人称“诗鬼”，浪漫主义奇崛冷艳，“黑云压城城欲摧”《雁门太守行》、《李凭箜篌引》。',works:'雁门太守行、李凭箜篌引、梦天'},
+{name:'孟郊',type:'诗人',birth:751,death:814,era:'中唐',tags:'诗囚',desc:'中唐苦吟诗人，与贾岛并称“郊寒岛瘦”，《游子吟》“谁言寸草心，报得三春晖”千古传诵。',works:'游子吟、登科后'},
+{name:'贾岛',type:'诗人',birth:779,death:843,era:'中唐',tags:'诗奴',desc:'中唐苦吟诗人，“推敲”典故出处，“鸟宿池边树，僧敲月下门”，诗风清奇幽僻。',works:'寻隐者不遇、题李凝幽居'},
+{name:'元稹',type:'诗人',birth:779,death:831,era:'中唐',tags:'新乐府',desc:'中唐诗人，与白居易并称“元白”，《离思五首》“曾经沧海难为水，除却巫山不是云”千古名句。',works:'离思五首、莺莺传'},
+{name:'杜牧',type:'诗人',birth:803,death:852,era:'晚唐',tags:'小李杜',desc:'晚唐诗人，与李商隐并称“小李杜”，字牧之号樊川居士，咏史七绝冠绝晚唐，《赤壁》《泊秦淮》《阿房宫赋》。',works:'赤壁、泊秦淮、阿房宫赋'},
+{name:'李商隐',type:'诗人',birth:813,death:858,era:'晚唐',tags:'小李杜',desc:'晚唐诗人，字义山号玉溪生，无题诗开创者，朦胧唯美，“春蚕到死丝方尽”“此情可待成追忆”传诵千古。',works:'无题、锦瑟、夜雨寄北'},
+{name:'温庭筠',type:'诗人',birth:812,death:866,era:'晚唐',tags:'花间派鼻祖',desc:'晚唐诗人、词人，花间派鼻祖，词风秾艳精致，与李商隐并称“温李”。',works:'菩萨蛮、商山早行'},
+{name:'韦庄',type:'诗人',birth:836,death:910,era:'晚唐五代',tags:'花间派',desc:'晚唐五代诗人、词人，花间派代表，《菩萨蛮》“人人尽说江南好”千古名句。',works:'菩萨蛮、秦妇吟'},
+{name:'李煜',type:'诗人',birth:937,death:978,era:'南唐',tags:'千古词帝',desc:'南唐后主，字重光，词帝，亡国后词风沉郁哀婉，《虞美人》“问君能有几多愁”、《浪淘沙》《相见欢》冠绝词史。',works:'虞美人、浪淘沙、相见欢'},
+{name:'柳永',type:'诗人',birth:984,death:1053,era:'北宋',tags:'婉约派',desc:'北宋词人，婉约派代表，大量创作慢词，“凡有井水处，皆能歌柳词”，《雨霖铃》“杨柳岸晓风残月”。',works:'雨霖铃、望海潮、八声甘州'},
+{name:'范仲淹',type:'诗人',birth:989,death:1052,era:'北宋',tags:'范文正公',desc:'北宋政治家、文学家，《岳阳楼记》“先天下之忧而忧，后天下之乐而乐”，开宋词豪放先声。',works:'岳阳楼记、渔家傲·秋思'},
+{name:'晏殊',type:'诗人',birth:991,death:1055,era:'北宋',tags:'婉约派',desc:'北宋词人，婉约派代表，“无可奈何花落去，似曾相识燕归来”，《浣溪沙》家喻户晓。',works:'浣溪沙、蝶恋花'},
+{name:'欧阳修',type:'诗人',birth:1007,death:1072,era:'北宋',tags:'唐宋八大家',desc:'北宋文坛领袖，唐宋八大家之一，字永叔号醉翁六一居士，《醉翁亭记》“醉翁之意不在酒”。',works:'醉翁亭记、秋声赋'},
+{name:'王安石',type:'诗人',birth:1021,death:1086,era:'北宋',tags:'唐宋八大家',desc:'北宋政治家、文学家，熙宁变法主持者，唐宋八大家之一，“不畏浮云遮望眼，自缘身在最高层”。',works:'泊船瓜洲、登飞来峰、游褒禅山记'},
+{name:'苏轼',type:'诗人',birth:1037,death:1101,era:'北宋',tags:'坡仙·豪放派',desc:'北宋大文豪，字子瞻号东坡居士，唐宋八大家，诗词文书画俱佳，豪放词派开创者，《水调歌头》《念奴娇·赤壁怀古》。',works:'水调歌头、念奴娇·赤壁怀古、赤壁赋'},
+{name:'黄庭坚',type:'诗人',birth:1045,death:1105,era:'北宋',tags:'江西诗派开山',desc:'北宋诗人、书法家，江西诗派开山之祖，书法宋四家“苏黄米蔡”之一，诗风奇崛瘦硬。',works:'寄黄几复、松风阁诗帖'},
+{name:'秦观',type:'诗人',birth:1049,death:1100,era:'北宋',tags:'婉约派',desc:'北宋词人，婉约派代表，苏门四学士之一，“两情若是久长时，又岂在朝朝暮暮”《鹊桥仙》。',works:'鹊桥仙、踏莎行'},
+{name:'周邦彦',type:'诗人',birth:1056,death:1121,era:'北宋',tags:'词家之冠',desc:'北宋词人，格律派集大成者，被誉为“词家之冠”，词风精工典丽。',works:'苏幕遮·燎沉香、兰陵王·柳'},
+{name:'李清照',type:'诗人',birth:1084,death:1155,era:'南宋',tags:'千古第一才女',desc:'南宋女词人，号易安居士，婉约派正宗，“千古第一才女”，前期清丽后期沉哀，《声声慢》《如梦令》《醉花阴》。',works:'声声慢、如梦令、醉花阴、武陵春'},
+{name:'陆游',type:'诗人',birth:1125,death:1210,era:'南宋',tags:'爱国诗人',desc:'南宋爱国诗人，字务观号放翁，存诗九千余首，“山重水复疑无路，柳暗花明又一村”《游山西村》、《示儿》绝笔。',works:'示儿、游山西村、书愤、钗头凤'},
+{name:'辛弃疾',type:'诗人',birth:1140,death:1207,era:'南宋',tags:'词中之龙',desc:'南宋豪放派词人，字幼安号稼轩，人称“词中之龙”，与苏轼并称“苏辛”，《永遇乐·京口北固亭怀古》《破阵子》。',works:'永遇乐·京口北固亭怀古、破阵子·为陈同甫赋壮词以寄之'},
+{name:'姜夔',type:'诗人',birth:1154,death:1221,era:'南宋',tags:'格律派',desc:'南宋词人、音乐家，号白石道人，格律派代表，词风清空骚雅，自度曲《扬州慢》传世。',works:'扬州慢、暗香、疏影'},
+// 画家30位
+{name:'顾恺之',type:'画家',birth:348,death:409,era:'东晋',tags:'画祖',desc:'东晋画家，字长康，人称“画祖”，“以形写神”“迁想妙得”画论提出者，《女史箴图》《洛神赋图》传世，三绝：才绝画绝痴绝。',works:'女史箴图、洛神赋图、论画'},
+{name:'展子虔',type:'画家',birth:545,death:618,era:'隋代',tags:'唐画之祖',desc:'隋代画家，《游春图》是现存最早山水画，开创青绿山水端绪，被称为“唐画之祖”。',works:'游春图'},
+{name:'阎立本',type:'画家',birth:601,death:673,era:'初唐',tags:'宫廷画家',desc:'初唐宫廷画家，擅长人物画，《步辇图》《历代帝王图》传世，人物刻画传神。',works:'步辇图、历代帝王图'},
+{name:'吴道子',type:'画家',birth:680,death:759,era:'盛唐',tags:'画圣',desc:'盛唐画家，人称“画圣”，又名道玄，擅佛道人物，创“吴带当风”兰叶描，《送子天王图》，民间画工祖师。',works:'送子天王图、八十七神仙卷'},
+{name:'李思训',type:'画家',birth:651,death:716,era:'盛唐',tags:'北宗之祖',desc:'唐代画家，青绿山水画派开创者，世称大李将军，北宗山水画之祖，与儿子李昭道并称“大小李将军”。',works:'江帆楼阁图'},
+{name:'王维',type:'画家',birth:701,death:761,era:'盛唐',tags:'南宗之祖',desc:'唐代诗人、画家，字摩诘，文人画南宗之祖，“诗中有画画中有诗”，破墨山水开创者，《辋川图》。',works:'辋川图、雪溪图'},
+{name:'张萱',type:'画家',birth:713,death:755,era:'盛唐',tags:'仕女画',desc:'盛唐仕女画家，擅贵族妇女婴儿，《虢国夫人游春图》《捣练图》传世，雍容华贵。',works:'虢国夫人游春图、捣练图'},
+{name:'周昉',type:'画家',birth:730,death:800,era:'中唐',tags:'仕女画',desc:'中唐仕女画家，创“水月观音”体，《簪花仕女图》《挥扇仕女图》，衣裳简劲彩色柔丽。',works:'簪花仕女图、挥扇仕女图'},
+{name:'韩滉',type:'画家',birth:723,death:787,era:'中唐',tags:'畜兽画',desc:'中唐画家，擅画牛，《五牛图》是现存最早纸本中国画，传神写照。',works:'五牛图'},
+{name:'荆浩',type:'画家',birth:850,death:936,era:'五代',tags:'北方山水画派',desc:'五代后梁画家，北方山水画派开创者，《匡庐图》，著《笔法记》提出“六要”：气韵律思景笔墨。',works:'匡庐图、笔法记'},
+{name:'关仝',type:'画家',birth:907,death:960,era:'五代',tags:'北方山水',desc:'五代画家，荆浩弟子，“荆关”并称，“关家山水”笔简气壮，《关山行旅图》。',works:'关山行旅图、山溪待渡图'},
+{name:'董源',type:'画家',birth:934,death:962,era:'五代',tags:'南方山水画派·南宗正传',desc:'五代南唐画家，南方山水画派开创者，字叔达，南宗山水正传，水墨淡墨轻岚，《潇湘图》《夏景山口待渡图》。',works:'潇湘图、夏山图、龙宿郊民图'},
+{name:'巨然',type:'画家',birth:940,death:990,era:'五代北宋',tags:'南方山水',desc:'五代宋初画家，董源弟子，“董巨”并称，开元宗南派山水，《层岩丛树图》《万壑松风图》。',works:'层岩丛树图、万壑松风图'},
+{name:'顾闳中',type:'画家',birth:910,death:980,era:'五代南唐',tags:'人物画',desc:'五代南唐画家，《韩熙载夜宴图》传世，人物神态刻画入微，千古名作。',works:'韩熙载夜宴图'},
+{name:'范宽',type:'画家',birth:950,death:1032,era:'北宋',tags:'北宋三大家',desc:'北宋山水画家，北宋三大家之一，“与其师人，不若师诸造化”，《溪山行旅图》高远雄浑，雨点皴。',works:'溪山行旅图、雪景寒林图'},
+{name:'郭熙',type:'画家',birth:1023,death:1085,era:'北宋',tags:'北宋山水',desc:'北宋山水画家，著《林泉高致集》提出“三远法”（高远深远平远），《早春图》卷云皴鬼面石。',works:'早春图、林泉高致集、窠石平远图'},
+{name:'李公麟',type:'画家',birth:1049,death:1106,era:'北宋',tags:'白描大师',desc:'北宋画家，字伯时号龙眠居士，白描画法集大成者，《五马图》《维摩诘像》，不施丹青而光彩照人。',works:'五马图、维摩演教图'},
+{name:'张择端',type:'画家',birth:1085,death:1145,era:'北宋',tags:'风俗画',desc:'北宋风俗画家，《清明上河图》传世，汴京繁华市井全景，风俗画巅峰之作。',works:'清明上河图'},
+{name:'王希孟',type:'画家',birth:1096,death:1119,era:'北宋',tags:'青绿山水',desc:'北宋天才少年画家，18岁作《千里江山图》，青绿山水巅峰，长卷壮丽绝伦。',works:'千里江山图'},
+{name:'米芾',type:'画家',birth:1051,death:1107,era:'北宋',tags:'米氏云山·宋四家',desc:'北宋书画家，宋四家之一，创“米点皴”“米氏云山”水墨山水，水墨大写意先河，人称米颠。',works:'蜀素帖、米氏云山图'},
+{name:'李唐',type:'画家',birth:1066,death:1150,era:'南宋',tags:'南宋四大家',desc:'南宋画家，南宋四大家之首，创大斧劈皴，《万壑松风图》开南宋院体山水新风。',works:'万壑松风图、采薇图'},
+{name:'刘松年',type:'画家',birth:1131,death:1218,era:'南宋',tags:'南宋四大家',desc:'南宋画家，南宋四大家之一，钱塘人，擅山水人物，《四景山水图》精丽严谨。',works:'四景山水图、罗汉图'},
+{name:'马远',type:'画家',birth:1140,death:1225,era:'南宋',tags:'南宋四大家·马一角',desc:'南宋画家，南宋四大家之一，人称“马一角”，一角半边构图，《寒江独钓图》留白空灵。',works:'寒江独钓图、踏歌图、水图'},
+{name:'夏圭',type:'画家',birth:1180,death:1230,era:'南宋',tags:'南宋四大家·夏半边',desc:'南宋画家，南宋四大家之一，人称“夏半边”，拖泥带水皴，《溪山清远图》水墨苍劲。',works:'溪山清远图、烟岫林居图'},
+{name:'赵孟頫',type:'画家',birth:1254,death:1322,era:'元代',tags:'元人冠冕',desc:'元代书画大家，字子昂号松雪道人，元人冠冕，书画开一代风气，复古晋唐，《鹊华秋色图》。',works:'鹊华秋色图、洛神赋、秀石疏林图'},
+{name:'黄公望',type:'画家',birth:1269,death:1354,era:'元代',tags:'元四家',desc:'元代画家，元四家之首，字子久号大痴道人，《富春山居图》中国山水长卷巅峰，浅绛山水。',works:'富春山居图、九峰雪霁图'},
+{name:'倪瓒',type:'画家',birth:1301,death:1374,era:'元代',tags:'元四家·倪高士',desc:'元代画家，元四家之一，字元镇号云林，三段式平远构图，逸笔草草聊写胸中逸气，《六君子图》《渔庄秋霁图》。',works:'六君子图、渔庄秋霁图、容膝斋图'},
+{name:'吴镇',type:'画家',birth:1280,death:1354,era:'元代',tags:'元四家',desc:'元代画家，元四家之一，字仲圭号梅花道人，擅渔父图，水墨苍莽沉郁。',works:'渔父图、芦花寒雁图'},
+{name:'王蒙',type:'画家',birth:1308,death:1385,era:'元代',tags:'元四家',desc:'元代画家，元四家之一，字叔明号黄鹤山樵，牛毛皴解索皴，繁密幽深，《青卞隐居图》。',works:'青卞隐居图、葛稚川移居图'},
+{name:'沈周',type:'画家',birth:1427,death:1509,era:'明代',tags:'明四家·吴门画派',desc:'明代画家，明四家吴门四家之首，吴门画派开创者，字启南号石田，《庐山高图》雄浑厚重。',works:'庐山高图、沧州趣图'},
+{name:'文徵明',type:'画家',birth:1470,death:1559,era:'明代',tags:'明四家',desc:'明代书画家，明四家吴门四家之一，字徵仲号衡山居士，诗文书画四绝，山水兰竹人物皆精。',works:'惠山茶会图、真赏斋图、兰亭修禊图'},
+{name:'唐寅',type:'画家',birth:1470,death:1524,era:'明代',tags:'明四家·唐伯虎',desc:'明代书画家，字伯虎号六如居士，明四家之一，诗书画三绝，风流才子，《落霞孤鹜图》《秋风纨扇图》。',works:'落霞孤鹜图、秋风纨扇图、事茗图'},
+{name:'仇英',type:'画家',birth:1498,death:1552,era:'明代',tags:'明四家',desc:'明代画家，明四家之一，字实父号十洲，青绿山水人物精工，院体高手，《汉宫春晓图》。',works:'汉宫春晓图、桃源仙境图、赤壁图'},
+{name:'徐渭',type:'画家',birth:1521,death:1593,era:'明代',tags:'青藤道人·大写意',desc:'明代书画家文学家，字文长号青藤老人，水墨大写意花卉开创者，泼墨淋漓，八大石涛皆师之。',works:'墨葡萄图、杂花图卷、四声猿'},
+{name:'董其昌',type:'画家',birth:1555,death:1636,era:'明代',tags:'南北宗论',desc:'明代书画家，字玄宰号思白，提出山水画“南北宗论”，崇南贬北，文人画理论集大成者，影响后世三百年。',works:'高逸图、昼锦堂图、画禅室随笔'},
+{name:'陈洪绶',type:'画家',birth:1598,death:1652,era:'明末',tags:'陈老莲',desc:'明末画家，字章侯号老莲，人物画奇古夸张，变形主义大师，《水浒叶子》《西厢记》插图。',works:'水浒叶子、西厢记插图、屈子行吟图'},
+{name:'朱耷',type:'画家',birth:1626,death:1705,era:'清代',tags:'八大山人·四僧',desc:'明末清初画家，四僧之一，明宗室，号八大山人，写意花鸟简括冷峻孤傲，“墨点无多泪点多”。',works:'荷石水禽图、孔雀图、安晚册'},
+{name:'石涛',type:'画家',birth:1642,death:1707,era:'清代',tags:'苦瓜和尚·四僧',desc:'明末清初画家，四僧之一，明宗室，号苦瓜和尚，著《苦瓜和尚画语录》“笔墨当随时代”“搜尽奇峰打草稿”。',works:'搜尽奇峰打草稿图、苦瓜和尚画语录、墨荷图'},
+{name:'髡残',type:'画家',birth:1612,death:1692,era:'清代',tags:'石溪·四僧',desc:'明末清初画家，四僧之一，号石溪，与石涛并称“二石”，山水苍莽厚重。',works:'层岩叠壑图、雨洗山根图'},
+{name:'弘仁',type:'画家',birth:1610,death:1664,era:'清代',tags:'渐江·四僧',desc:'明末清初画家，四僧之一，号渐江，新安画派开创者，山水疏淡冷寂，尤喜画黄山。',works:'黄海松石图、晓江风便图'},
+{name:'王时敏',type:'画家',birth:1592,death:1680,era:'清代',tags:'四王·正统派',desc:'清代画家，四王之首，正统派领袖，娄东派开创者，师法黄公望，温润虚和。',works:'仙山楼阁图、仿黄公望山水图'},
+{name:'王鉴',type:'画家',birth:1598,death:1677,era:'清代',tags:'四王',desc:'清代画家，四王之一，字玄照号湘碧，山水仿古功力深厚，青绿清润。',works:'长松仙馆图、仿宋元山水册'},
+{name:'王翚',type:'画家',birth:1632,death:1717,era:'清代',tags:'四王·虞山派',desc:'清代画家，四王之一，字石谷号耕烟散人，虞山派开创者，“集大成”，《康熙南巡图》主持绘制。',works:'康熙南巡图、溪山红树图'},
+{name:'王原祁',type:'画家',birth:1642,death:1715,era:'清代',tags:'四王·娄东派',desc:'清代画家，四王之一，字茂京号麓台，娄东派领袖，山水“浑厚华滋”，官至户部侍郎。',works:'辋川图、仿黄公望富春山图'},
+{name:'郑燮',type:'画家',birth:1693,death:1765,era:'清代',tags:'扬州八怪·郑板桥',desc:'清代书画家，扬州八怪代表，字克柔号板桥，擅兰竹石，“六分半书”板桥体，“难得糊涂”。',works:'兰竹图、竹石图、板桥全集'},
+{name:'金农',type:'画家',birth:1687,death:1763,era:'清代',tags:'扬州八怪',desc:'清代书画家，扬州八怪之首，字寿门号冬心先生，漆书独创，梅竹佛像古拙奇崛。',works:'梅花图、漆书条幅、自画像'},
+{name:'郎世宁',type:'画家',birth:1688,death:1766,era:'清代',tags:'中西合璧',desc:'意大利来华传教士画家，清代宫廷画师，融合中西画法，《百骏图》写实逼真。',works:'百骏图、乾隆帝大阅图、圆明园西洋楼设计'},
+// 书家20位
+{name:'李斯',type:'书家',birth:-284,death:-208,era:'秦代',tags:'小篆之祖',desc:'秦代丞相，小篆书法创造者，“小篆之祖”，《泰山刻石》《琅琊台刻石》端严庄重大气。',works:'泰山刻石、琅琊台刻石、仓颉篇'},
+{name:'蔡邕',type:'书家',birth:133,death:192,era:'东汉',tags:'飞白书',desc:'东汉文学家书法家，创“飞白书”，《熹平石经》正定六经文字，笔法传女蔡文姬。',works:'熹平石经、笔论、九势'},
+{name:'钟繇',type:'书家',birth:151,death:230,era:'三国魏',tags:'楷书之祖',desc:'三国魏书法家，字元常，“楷书之祖”，与王羲之并称“钟王”，《宣示表》《贺捷表》古朴典雅。',works:'宣示表、贺捷表、荐季直表'},
+{name:'卫铄',type:'书家',birth:272,death:349,era:'东晋',tags:'卫夫人',desc:'东晋女书法家，字茂漪，世称卫夫人，王羲之启蒙老师，著《笔阵图》论笔法。',works:'笔阵图、名姬帖'},
+{name:'王羲之',type:'书家',birth:303,death:361,era:'东晋',tags:'书圣',desc:'东晋书法家，字逸少，“书圣”，《兰亭集序》天下第一行书，楷行草皆为后世典范，与其子王献之并称“二王”。',works:'兰亭集序、快雪时晴帖、十七帖、黄庭经'},
+{name:'王献之',type:'书家',birth:344,death:386,era:'东晋',tags:'小圣',desc:'东晋书法家，王羲之子，字子敬，“小圣”，创“一笔书”，《中秋帖》《鸭头丸帖》风流俊美。',works:'中秋帖、鸭头丸帖、洛神赋十三行'},
+{name:'欧阳询',type:'书家',birth:557,death:641,era:'初唐',tags:'初唐四家·欧体',desc:'初唐书法家，初唐四家之一，字信本，欧体开创者，楷书结体险峻严整，《九成宫醴泉铭》天下第一楷书。',works:'九成宫醴泉铭、化度寺碑、虞恭公碑'},
+{name:'虞世南',type:'书家',birth:558,death:638,era:'初唐',tags:'初唐四家',desc:'初唐书法家，初唐四家之一，字伯施，楷书温润如玉君子风，《孔子庙堂碑》外柔内刚。',works:'孔子庙堂碑、汝南公主墓志铭'},
+{name:'褚遂良',type:'书家',birth:596,death:658,era:'初唐',tags:'初唐四家',desc:'初唐书法家，初唐四家之一，字登善，楷书绰约婀娜，《雁塔圣教序》瘦劲疏朗，唐之广大教化主。',works:'雁塔圣教序、孟法师碑、阴符经'},
+{name:'薛稷',type:'书家',birth:649,death:713,era:'初唐',tags:'初唐四家',desc:'初唐书法家，初唐四家之一，字嗣通，学褚遂良，瘦劲爽利，“买褚得薛，不失其节”。',works:'信行禅师碑、升仙太子碑碑阴'},
+{name:'张旭',type:'书家',birth:675,death:750,era:'盛唐',tags:'草圣',desc:'唐代书法家，字伯高，“草圣”，世称张长史，狂草开创者，嗜酒，每醉后呼走狂书，“颠张醉素”之张颠，《古诗四帖》。',works:'古诗四帖、肚痛帖、郎官石柱记'},
+{name:'怀素',type:'书家',birth:737,death:799,era:'中唐',tags:'狂僧',desc:'唐代僧人书法家，字藏真，狂草大家，“颠张醉素”醉素，以蕉叶练字，《自叙帖》奔蛇走虺骤雨旋风。',works:'自叙帖、小草千字文、苦笋帖'},
+{name:'颜真卿',type:'书家',birth:709,death:784,era:'盛唐',tags:'颜体',desc:'唐代书法家，字清臣，颜鲁公，颜体开创者，楷书雄浑厚重大气磅礴，“颜筋柳骨”之颜筋，《祭侄文稿》天下第二行书。',works:'祭侄文稿、多宝塔碑、颜勤礼碑、麻姑仙坛记'},
+{name:'柳公权',type:'书家',birth:778,death:865,era:'中唐',tags:'柳体',desc:'唐代书法家，字诚悬，柳体开创者，“颜筋柳骨”之柳骨，楷书骨力劲健，“心正则笔正”笔谏，《玄秘塔碑》《神策军碑》。',works:'玄秘塔碑、神策军碑、蒙诏帖'},
+{name:'苏轼',type:'书家',birth:1037,death:1101,era:'北宋',tags:'宋四家·苏体',desc:'北宋大文豪书法家，宋四家之首，字子瞻号东坡，书法“自出新意不践古人”，丰腴跌宕，《黄州寒食帖》天下第三行书。',works:'黄州寒食帖、前赤壁赋、洞庭春色赋'},
+{name:'黄庭坚',type:'书家',birth:1045,death:1105,era:'北宋',tags:'宋四家',desc:'北宋诗人书法家，宋四家之一，字鲁直号山谷道人，草书长枪大戟纵横拗崛，行书辐射式结构独树一帜。',works:'松风阁诗帖、诸上座帖、黄州寒食诗跋'},
+{name:'米芾',type:'书家',birth:1051,death:1107,era:'北宋',tags:'宋四家·米颠',desc:'北宋书画家，宋四家之一，字元章号襄阳漫士，人称米颠，行书“风樯阵马沉着痛快”，“刷字”，《蜀素帖》。',works:'蜀素帖、苕溪诗帖、珊瑚帖'},
+{name:'蔡襄',type:'书家',birth:1012,death:1067,era:'北宋',tags:'宋四家',desc:'北宋书法家，宋四家之一，字君谟，楷书端劲高古，行书温淳婉美，《万安桥记》《脚气帖》。',works:'万安桥记、澄心堂纸帖、脚气帖'},
+{name:'赵孟頫',type:'书家',birth:1254,death:1322,era:'元代',tags:'赵体·元人冠冕',desc:'元代书画大家，赵体开创者，字子昂号松雪道人，复古晋唐，楷书四大家之一（欧颜柳赵），圆润秀雅。',works:'洛神赋、胆巴碑、玄妙观重修三门记、汲黯传'},
+{name:'董其昌',type:'书家',birth:1555,death:1636,era:'明代',tags:'华亭派',desc:'明代书画家，字玄宰号思白，书法淡远空灵，集帖学大成，影响康熙乾隆及清初书风。',works:'琵琶行、三世自诰、画禅室随笔'},
+{name:'王铎',type:'书家',birth:1592,death:1652,era:'明末清初',tags:'神笔王铎',desc:'明末清初书法家，字觉斯号嵩樵，“神笔王铎”，涨墨法，行书草书雄强跌宕，影响日本书道。',works:'拟山园帖、草书杜诗卷、赠张抱一行书卷'},
+{name:'傅山',type:'书家',birth:1607,death:1684,era:'明末清初',tags:'四宁四毋',desc:'明末清初思想家书法家，字青主，提出“四宁四毋”：宁拙毋巧，宁丑毋媚，宁支离毋轻滑，宁真率毋安排。',works:'啬庐妙翰、草书孟浩然诗、丹枫阁记'},
+{name:'邓石如',type:'书家',birth:1743,death:1805,era:'清代',tags:'碑学集大成',desc:'清代书法家，字顽伯号完白山人，碑学集大成者，篆隶真行草皆精，“四体皆精国朝第一”。',works:'白氏草堂记、篆书千字文、完白山人篆刻偶存'},
+{name:'何绍基',type:'书家',birth:1799,death:1873,era:'清代',tags:'回腕法',desc:'清代书法家，字子贞号东洲，创回腕执笔法，隶书行书皆独具面目，沉雄而峭拔。',works:'临张迁碑、行书论书帖、道因碑题跋'},
+// 琴家10位
+{name:'俞伯牙',type:'琴家',birth:-400,death:-320,era:'春秋',tags:'高山流水',desc:'春秋琴师，《高山》《流水》知音典故主人公，与钟子期知音之交传为千古美谈。',works:'高山、流水'},
+{name:'师旷',type:'琴家',birth:-572,death:-532,era:'春秋',tags:'乐圣',desc:'春秋晋国乐师，字子野，双目失明，“乐圣”，听力超群，“师旷之聪”，提出“靡靡之音”亡国论。',works:'阳春、白雪、玄默'},
+{name:'司马相如',type:'琴家',birth:-179,death:-117,era:'西汉',tags:'凤求凰',desc:'西汉文学家琴家，绿绮琴主人，以《凤求凰》琴挑卓文君，千古爱情佳话。',works:'凤求凰、长门怨'},
+{name:'蔡邕',type:'琴家',birth:133,death:192,era:'东汉',tags:'焦尾琴',desc:'东汉文学家音乐家，焦尾琴制作者，著《琴操》，蔡文姬之父。',works:'琴操、蔡氏五弄'},
+{name:'嵇康',type:'琴家',birth:224,death:263,era:'三国魏',tags:'竹林七贤·广陵散',desc:'三国魏思想家音乐家竹林七贤之一，临刑东市索琴弹《广陵散》，“《广陵散》于今绝矣”，著《声无哀乐论》。',works:'广陵散、声无哀乐论、琴赋'},
+{name:'阮籍',type:'琴家',birth:210,death:263,era:'三国魏',tags:'竹林七贤',desc:'三国魏竹林七贤之一，嗜酒能啸善琴，作《酒狂》琴曲，苦闷放达。',works:'酒狂、乐论'},
+{name:'赵耶利',type:'琴家',birth:563,death:639,era:'隋唐',tags:'吴声清婉',desc:'隋唐之际琴学大师，“吴声清婉若长江广流绵延徐逝，蜀声躁急若激浪奔雷”，整理大量琴谱。',works:'琴叙谱、弹琴手势谱'},
+{name:'董庭兰',type:'琴家',birth:695,death:765,era:'盛唐',tags:'董大',desc:'盛唐琴师，高适《别董大》“莫愁前路无知己，天下谁人不识君”所写之人，善沈家声祝家声。',works:'胡笳声（大小胡笳）'},
+{name:'郭沔',type:'琴家',birth:1190,death:1260,era:'南宋',tags:'浙派创始人',desc:'南宋琴家，字望楚号楚望，浙派古琴创始人，《潇湘水云》作者，忧国忧民寄托家国之思。',works:'潇湘水云、泛沧浪、秋鸿'},
+{name:'严澂',type:'琴家',birth:1547,death:1625,era:'明末',tags:'虞山派创始人',desc:'明末琴家，字道澈号天池，虞山琴派创始人，“清微淡远”琴风，编《松弦馆琴谱》。',works:'松弦馆琴谱，虞山派琴学'},
+{name:'徐上瀛',type:'琴家',birth:1582,death:1662,era:'明末',tags:'青山·溪山琴况',desc:'明末琴家，号青山，虞山派集大成者，著《溪山琴况》二十四况，中国古琴美学巅峰之作。',works:'溪山琴况、大还阁琴谱'},
+// 茶人8位
+{name:'陆羽',type:'茶人',birth:733,death:804,era:'中唐',tags:'茶圣',desc:'唐代茶学家，字鸿渐号竟陵子，“茶圣”，著《茶经》世界第一部茶叶专著，创立茶道精神。',works:'茶经'},
+{name:'皎然',type:'茶人',birth:720,death:803,era:'中唐',tags:'诗僧·茶道',desc:'唐代诗僧茶僧，陆羽好友，最早提出“茶道”概念，《饮茶歌诮崔石使君》“一饮涤昏寐，再饮清我神，三饮便得道”。',works:'饮茶歌诮崔石使君、诗式'},
+{name:'卢仝',type:'茶人',birth:795,death:835,era:'中唐',tags:'茶仙',desc:'唐代诗人茶人，号玉川子，“茶仙”，《七碗茶歌》“七碗吃不得也，唯觉两腋习习清风生”千古绝唱。',works:'七碗茶歌（走笔谢孟谏议寄新茶）'},
+{name:'蔡襄',type:'茶人',birth:1012,death:1067,era:'北宋',tags:'小龙团·茶录',desc:'北宋书法家茶学家，福建转运使时造小龙团茶进贡，著《茶录》论点茶茶艺，宋代点茶重要文献。',works:'茶录、荔枝谱'},
+{name:'赵佶',type:'茶人',birth:1082,death:1135,era:'北宋',tags:'宋徽宗·大观茶论',desc:'宋徽宗，皇帝书画家茶学家，著《大观茶论》二十篇，点茶斗茶极致倡导者，宋代茶文化巅峰推动者。',works:'大观茶论、文会图'},
+{name:'朱权',type:'茶人',birth:1378,death:1448,era:'明代',tags:'宁王·茶谱',desc:'明太祖第十七子宁王朱权，号臞仙，改革团茶为叶茶冲泡，著《茶谱》，开创清饮茶文化。',works:'茶谱、神奇秘谱（琴谱）'},
+{name:'顾元庆',type:'茶人',birth:1487,death:1565,era:'明代',tags:'茶谱',desc:'明代茶学家，删校钱椿年《茶谱》，丰富叶茶冲泡法。',works:'茶谱、云林遗事'},
+{name:'张源',type:'茶人',birth:1540,death:1600,era:'明代',tags:'茶录',desc:'明代茶学家，隐居三十年著《茶录》，论造茶、辨茶、藏茶、火候、汤辨、泡法、饮茶，明代泡茶法经典。',works:'茶录'},
+// 棋手8位
+{name:'弈秋',type:'棋手',birth:-400,death:-330,era:'战国',tags:'通国之善弈者',desc:'战国棋手，见于《孟子》，是史载第一位围棋国手，“通国之善弈者也”，弈秋诲弈典故。',works:''},
+{name:'王积薪',type:'棋手',birth:705,death:775,era:'盛唐',tags:'棋待诏',desc:'唐代棋待诏，翰林院国手，“围棋十诀”作者，“长宜子孙”等著名棋局。',works:'围棋十诀、金谷园九局谱'},
+{name:'顾师言',type:'棋手',birth:800,death:880,era:'晚唐',tags:'三十三手镇神头',desc:'唐代棋待诏，与日本国王子对弈，三十三手“镇神头”取胜，千古名局。',works:'三十三手镇神头'},
+{name:'刘仲甫',type:'棋手',birth:1040,death:1110,era:'北宋',tags:'棋待诏·宋代第一国手',desc:'北宋棋待诏，宋代围棋第一国手，著《棋诀》，擅“饶天下先”，称霸棋坛二十余年。',works:'棋诀、忘忧集、棋势'},
+{name:'过百龄',type:'棋手',birth:1587,death:1660,era:'明末',tags:'明代棋圣',desc:'明末棋手，名文年字百龄，明末棋坛领袖，“过伯龄一生唯倚盖”，著《官子谱》《三子谱》。',works:'官子谱、三子谱、四子谱、受三子谱'},
+{name:'黄龙士',type:'棋手',birth:1651,death:1690,era:'清初',tags:'清代棋圣',desc:'清代棋手，名虬字月天，康熙朝棋圣，与黄宗羲顾炎武等并称“十四圣人”，棋风空灵幽远，《血泪篇》让徐星友三子十局。',works:'弈括、黄龙士全图、血泪篇名局'},
+{name:'徐星友',type:'棋手',birth:1644,death:1720,era:'清代',tags:'棋家正宗',desc:'清代棋手，名远，黄龙士弟子，《血泪篇》后棋艺大进，称霸棋坛数十年，著《兼山堂弈谱》。',works:'兼山堂弈谱'},
+{name:'范西屏',type:'棋手',birth:1709,death:1769,era:'清代',tags:'棋圣',desc:'清代棋手，名世勋，乾隆朝棋圣，与施襄夏并称“施范”，《当湖十局》千古绝唱，棋风奇妙高远神龙变化。',works:'桃花泉弈谱、当湖十局'},
+{name:'施襄夏',type:'棋手',birth:1710,death:1771,era:'清代',tags:'棋圣',desc:'清代棋手，名绍暗号定庵，与范西屏同里同学，《当湖十局》对手，棋风严密精到如大海巨浸，著《弈理指归》。',works:'弈理指归、当湖十局'},
+// 武师9位
+{name:'张三丰',type:'武师',birth:1247,death:1458,era:'元明',tags:'武当派创始人',desc:'元明之际道士，武当派内家拳创始人，太极拳源流之一，传说创武当拳、太极十三势，武当武术祖师。',works:'太极拳论、玄机直讲、无根树'},
+{name:'戚继光',type:'武师',birth:1528,death:1588,era:'明代',tags:'抗倭名将·拳经',desc:'明代抗倭名将军事家武术家，著《纪效新书》，其中《拳经捷要篇》记载三十二势拳法，武术重要典籍。',works:'纪效新书、拳经捷要篇、练兵实纪'},
+{name:'陈王廷',type:'武师',birth:1600,death:1680,era:'明末清初',tags:'陈氏太极拳创始人',desc:'明末清初武术家，河南温县陈家沟人，陈氏太极拳创始人，造拳传世，太极拳最早定型者。',works:'陈氏拳谱、拳经总歌'},
+{name:'张松溪',type:'武师',birth:1500,death:1580,era:'明代',tags:'内家拳传人',desc:'明代武术家，鄞县人，武当内家拳重要传人，松溪派内家拳开创者，“松溪十段锦”。',works:'内家拳法源流'},
+{name:'王宗岳',type:'武师',birth:1736,death:1795,era:'清代',tags:'太极拳论作者',desc:'清代武术家，著《太极拳论》，太极拳理论经典，“太极者，无极而生，动静之机，阴阳之母也”“四两拨千斤”。',works:'太极拳论、十三势行功心解、打手歌'},
+{name:'杨露禅',type:'武师',birth:1799,death:1872,era:'清代',tags:'杨式太极拳创始人',desc:'清代武术家，河北永年人，杨式太极拳创始人，三下陈家沟学艺，“杨无敌”，把太极拳推广到京城。',works:'杨式太极拳架'},
+{name:'武禹襄',type:'武师',birth:1812,death:1880,era:'清代',tags:'武式太极拳创始人',desc:'清代武术家，河北永年人，武式太极拳创始人，著《十三势行功要解》等太极拳理论。',works:'武式太极拳架、拳解'},
+{name:'孙禄堂',type:'武师',birth:1860,death:1933,era:'清末民初',tags:'孙式太极拳·虎头少保',desc:'清末民初武术家，孙式太极拳创始人，形意八卦太极皆精，“虎头少保”“天下第一手”，《拳意述真》。',works:'拳意述真、太极拳学、形意拳学、八卦拳学'},
+{name:'董海川',type:'武师',birth:1797,death:1882,era:'清代',tags:'八卦掌创始人',desc:'清代武术家，河北文安人，八卦掌创始人，转掌走圈独树一帜，与杨露禅并称武林双峰。',works:'八卦掌转掌歌诀'},
+{name:'郭云深',type:'武师',birth:1820,death:1900,era:'清代',tags:'半步崩拳打天下',desc:'清代形意拳大师，河北深县人，“半步崩拳打天下”，狱中练拳戴镣创半步崩拳，刚猛无俦。',works:'形意拳精义'},
+// 工艺家8位
+{name:'鲁班',type:'工艺家',birth:-507,death:-444,era:'春秋',tags:'工匠祖师',desc:'春秋鲁国工匠，公输班，土木工匠祖师爷，发明云梯、锯子、刨子、墨斗、曲尺，中国工匠鼻祖。',works:''},
+{name:'蔡伦',type:'工艺家',birth:61,death:121,era:'东汉',tags:'造纸术改进者',desc:'东汉宦官，改进造纸术，用树皮麻头破布渔网造纸，“蔡侯纸”，中国四大发明之一，对人类文化传播贡献巨大。',works:'蔡侯纸造纸法'},
+{name:'欧冶子',type:'工艺家',birth:-560,death:-500,era:'春秋',tags:'铸剑大师',desc:'春秋越国人，铸剑大师，铸湛卢、纯钧、胜邪、鱼肠、巨阙五大名剑，龙渊泰阿工布三剑，中国刀剑铸造鼻祖。',works:'湛卢剑、鱼肠剑、龙泉剑'},
+{name:'李春',type:'工艺家',birth:595,death:655,era:'隋代',tags:'赵州桥',desc:'隋代桥梁工匠，设计建造赵州桥（安济桥），世界现存最早敞肩石拱桥，1400年仍屹立不倒，世界桥梁史奇迹。',works:'赵州桥（安济桥）'},
+{name:'毕昇',type:'工艺家',birth:972,death:1051,era:'北宋',tags:'活字印刷术发明者',desc:'北宋工匠，发明泥活字印刷术，世界印刷史重大革命，四大发明之一，比古腾堡活字早四百年。',works:'泥活字印刷法'},
+{name:'供春',type:'工艺家',birth:1500,death:1560,era:'明代',tags:'紫砂壶鼻祖',desc:'明代制壶大师，江苏宜兴人，紫砂壶鼻祖，“供春壶”树瘿壶，宜兴紫砂壶创始者。',works:'供春树瘿壶'},
+{name:'时大彬',type:'工艺家',birth:1573,death:1648,era:'明代',tags:'壶家妙手称三大',desc:'明代宜兴制壶大师，时鹏之子，“三大”之首，改大壶为小壶，紫砂壶工艺巅峰，“宫中艳说大彬壶”。',works:'大彬三足如意壶、提梁壶'},
+{name:'陆子冈',type:'工艺家',birth:1522,death:1620,era:'明代',tags:'子冈牌·琢玉圣手',desc:'明代苏州玉雕大师，“子冈牌”创始人，碾玉妙手，青玉白玉皆精，玉雕史上第一宗匠，“陆子冈治玉第一人”。',works:'子冈牌、白玉簪、合卺杯'}
 ];
-const graphLinks = [
-  {source:'气韵生动', target:'古画品录'},
-  {source:'气韵生动', target:'谢赫'},
-  {source:'以形写神', target:'气韵生动'},
-  {source:'骨法用笔', target:'气韵生动'},
-  {source:'意境', target:'气韵生动'},
-  {source:'逸品', target:'意境'},
-  {source:'古画品录', target:'谢赫'},
-  {source:'历代名画记', target:'张彦远'},
-  {source:'历代名画记', target:'书画同源'},
-  {source:'林泉高致', target:'郭熙'},
-  {source:'林泉高致', target:'山水画'},
-  {source:'书谱', target:'孙过庭'},
-  {source:'书谱', target:'书法'},
-  {source:'溪山琴况', target:'徐上瀛'},
-  {source:'溪山琴况', target:'古琴'},
-  {source:'茶经', target:'陆羽'},
-  {source:'文人画', target:'意境'},
-  {source:'文人画', target:'书画同源'},
-  {source:'山水画', target:'文人画'},
-  {source:'书画同源', target:'书法'},
-];
-graphChart.setOption({
-  tooltip: {},
-  legend: [{data:['艺理概念','典籍论著','宗匠名家','流派门类'], bottom:0}],
-  series: [{
-    type: 'graph',
-    layout: 'force',
-    roam: true,
-    draggable: true,
-    categories: [
-      {name:'艺理概念', itemStyle:{color:'#b22222'}},
-      {name:'典籍论著', itemStyle:{color:'#b8860b'}},
-      {name:'宗匠名家', itemStyle:{color:'#4682b4'}},
-      {name:'流派门类', itemStyle:{color:'#6b8e23'}},
-    ],
-    label: { show: true, fontSize: 12 },
-    force: { repulsion: 200, edgeLength: [60, 120] },
-    lineStyle: { color: 'rgba(0,0,0,0.2)', width: 1, curveness: 0.1 },
-    data: graphNodes,
-    links: graphLinks
-  }]
-});
 
-function toggleGraph(type) {}
-
-// 分类tab切换
-document.querySelectorAll('#categoryTabs .tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#categoryTabs .tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const cat = btn.dataset.cat;
-    document.querySelectorAll('#classicsGrid .classic-card').forEach(card => {
-      if (cat === 'all' || card.dataset.cat === cat) {
-        card.style.display = '';
-      } else {
-        card.style.display = 'none';
-      }
-    });
-  });
-});
-
-// 人物tab切换
-document.querySelectorAll('[data-people]').forEach(btn => {
-  if (btn.closest('section')?.id !== 'masters') return;
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#masters .tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const p = btn.dataset.people;
-    document.querySelectorAll('.person-card').forEach(card => {
-      if (p === 'all' || card.dataset.people === p) {
-        card.style.display = '';
-      } else {
-        card.style.display = 'none';
-      }
-    });
-  });
-});
-
-// 理论tab切换
-const theoryData = {
-  pins: `<h4 class="font-serif-cn text-xl font-bold mb-4">溪山琴况 · 琴学二十四况</h4>
-    <p class="text-[15px] text-gray-700 leading-relaxed mb-5">徐上瀛《溪山琴况》仿二十四诗品，立琴学美学二十四况，为古琴美学集大成。</p>
-    <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-3 text-center">
-      ${['和','静','清','远','古','澹','恬','逸','雅','丽','亮','采','洁','润','圆','坚','宏','细','溜','健','轻','重','迟','速'].map(k=>`<div class="bg-[rgba(184,134,11,0.06)] rounded-lg py-3 font-serif-cn font-bold text-[rgb(var(--gold-rgb))]">${k}</div>`).join('')}
-    </div>`,
-  shuopin: `<h4 class="font-serif-cn text-xl font-bold mb-4">书品三品 · 神 妙 能</h4>
-    <p class="text-[15px] text-gray-700 leading-relaxed mb-5">张怀瓘《书断》评书分神、妙、能三品，后加逸品，形成中华艺术品评标准体系。</p>
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="bg-[rgba(178,34,34,0.06)] rounded-lg p-5 text-center">
-        <div class="font-serif-cn text-3xl font-black text-[rgb(var(--brand-rgb))] mb-2">神品</div>
-        <p class="text-sm text-gray-700">造化入神，天机自动，非复人力可到，艺之极致。</p>
-      </div>
-      <div class="bg-[rgba(184,134,11,0.08)] rounded-lg p-5 text-center">
-        <div class="font-serif-cn text-3xl font-black text-[rgb(var(--gold-rgb))] mb-2">妙品</div>
-        <p class="text-sm text-gray-700">笔墨精微，意趣超然，尽善尽美，得艺之妙理。</p>
-      </div>
-      <div class="bg-[rgba(70,130,180,0.08)] rounded-lg p-5 text-center">
-        <div class="font-serif-cn text-3xl font-black text-steelblue mb-2" style="color:steelblue">能品</div>
-        <p class="text-sm text-gray-700">技法精熟，体法兼备，形象有功，达艺之规范。</p>
-      </div>
-    </div>`,
-  sanyuan: `<h4 class="font-serif-cn text-xl font-bold mb-4">山水三远法 · 空间观照之道</h4>
-    <p class="text-[15px] text-gray-700 leading-relaxed mb-5">郭熙《林泉高致》：「山有三远：自山下而仰山颠，谓之高远；自山前而窥山后，谓之深远；自近山而望远山，谓之平远。」</p>
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="bg-[rgba(107,142,35,0.08)] rounded-lg p-5">
-        <h6 class="font-serif-cn font-bold text-green-800 mb-2 text-lg">高远</h6>
-        <p class="text-sm text-gray-700 leading-relaxed">自下仰上，山势突兀高大，色清明，势突兀，如范宽《溪山行旅图》。</p>
-      </div>
-      <div class="bg-[rgba(70,130,180,0.08)] rounded-lg p-5">
-        <h6 class="font-serif-cn font-bold text-blue-800 mb-2 text-lg">深远</h6>
-        <p class="text-sm text-gray-700 leading-relaxed">山前窥山后，层峦叠嶂，意境重晦，幽深重叠，如郭熙《早春图》。</p>
-      </div>
-      <div class="bg-[rgba(205,133,63,0.08)] rounded-lg p-5">
-        <h6 class="font-serif-cn font-bold text-orange-800 mb-2 text-lg">平远</h6>
-        <p class="text-sm text-gray-700 leading-relaxed">近山望远，冲融缥缈，色有明有晦，意境冲淡，如倪瓒平远山水。</p>
-      </div>
-    </div>`
+// 类型配置
+const typeConfig = {
+'诗人':{color:'#c41e3a',icon:'📜'},
+'画家':{color:'#2e8b57',icon:'🖌️'},
+'书家':{color:'#2c5aa0',icon:'✍️'},
+'琴家':{color:'#9370db',icon:'🎵'},
+'茶人':{color:'#8b4513',icon:'🍵'},
+'棋手':{color:'#2f4f4f',icon:'♟️'},
+'武师':{color:'#b8860b',icon:'⚔️'},
+'工艺家':{color:'#cd5c5c',icon:'🔨'}
 };
-document.querySelectorAll('[data-theory]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-theory]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const key = btn.dataset.theory;
-    if (key !== 'sixfa') {
-      document.getElementById('theoryContent').innerHTML = theoryData[key];
-    } else {
-      document.getElementById('theoryContent').innerHTML = document.getElementById('sixfa')?.outerHTML || theoryData.sixfa;
-    }
-  });
-});
 
-// 门派tab
-const schoolData = {
-  wushu: `<div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--brand-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">内家拳</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">以静制动、以柔克刚、以意领气，重内功、重心法，武当、太极、形意、八卦属之。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">张三丰</span><span class="concept-tag">太极拳</span><span class="concept-tag">形意拳</span><span class="concept-tag">八卦掌</span><span class="concept-tag">以柔克刚</span></div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--gold-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">外家拳</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">以动为主、以刚克柔、以力降力，重拳脚、重招式，少林拳为其代表。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">少林寺</span><span class="concept-tag">少林拳</span><span class="concept-tag">长拳</span><span class="concept-tag">刚劲有力</span></div>
-    </div>`,
-  qin: `<div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--brand-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">虞山派</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">明末严澂创于常熟虞山，清微淡远、中正和平，取音古淡，为琴学正宗。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">严澂</span><span class="concept-tag">清微淡远</span><span class="concept-tag">松弦馆琴谱</span></div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--gold-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">广陵派</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">清初徐常遇创于扬州，跌宕多变、刚柔相济，指法细腻，节奏跌宕。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">徐常遇</span><span class="concept-tag">澄鉴堂琴谱</span><span class="concept-tag">五知斋琴谱</span></div>
-    </div>`,
-  shu: `<div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--brand-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">帖学</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">宗二王法帖，重流美妍丽、笔法传承，晋唐行草为宗，宋元明主流。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">王羲之</span><span class="concept-tag">王献之</span><span class="concept-tag">淳化阁帖</span><span class="concept-tag">馆阁体</span></div>
-    </div>
-    <div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--gold-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">碑学</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">清中期阮元、包世臣、康有为倡，宗汉魏北朝碑刻，重古朴雄强，开清代书法新局。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">阮元</span><span class="concept-tag">包世臣</span><span class="concept-tag">康有为</span><span class="concept-tag">北碑</span></div>
-    </div>`
-};
-document.querySelectorAll('[data-school]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-school]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const key = btn.dataset.school;
-    if (key !== 'nanbei') {
-      document.getElementById('schoolContent').innerHTML = schoolData[key];
-    } else {
-      document.getElementById('schoolContent').innerHTML = `<div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--brand-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">南宗 · 文人画</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">以王维为祖，用渲淡水墨、柔润披麻皴，重天趣、重写意、重气韵，为文人画正脉。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">王维</span><span class="concept-tag">董源</span><span class="concept-tag">巨然</span><span class="concept-tag">元四家</span><span class="concept-tag">水墨渲淡</span><span class="concept-tag">文人意趣</span></div>
-    </div><div class="layer-card rounded-xl p-6">
-      <div class="flex items-center gap-3 mb-4"><div class="w-3 h-3 rounded-full bg-[rgb(var(--gold-rgb))]"></div><h4 class="font-serif-cn font-bold text-lg">北宗 · 院体画</h4></div>
-      <p class="text-[15px] text-gray-700 leading-relaxed mb-3">以李思训父子为祖，用青绿山水、刚劲斧劈皴，重刻画、重工细、重写实，为画院正宗。</p>
-      <div class="flex flex-wrap gap-2"><span class="concept-tag">李思训</span><span class="concept-tag">李昭道</span><span class="concept-tag">马远</span><span class="concept-tag">夏圭</span><span class="concept-tag">青绿山水</span><span class="concept-tag">斧劈皴</span></div>
-    </div>`;
-    }
-  });
-});
+const eraNames = {'-500':'先秦','-200':'秦汉','0':'两汉','200':'魏晋','400':'南北朝','600':'初唐','700':'盛唐','800':'晚唐五代','1000':'北宋','1200':'南宋元','1400':'明代','1600':'明末清初','1800':'清代'};
+function getEra(year){ for(let k in eraNames) if(year<parseInt(k)) return eraNames[k]; return '近现代'; }
 
-// 智能推演
-const reasoningMap = {
-  '气韵生动|文人画': ['气韵生动', '→', '意境', '→', '逸品', '→', '文人画'],
-  '气韵生动|意境': ['气韵生动', '→', '以形写神', '→', '意境'],
-  '以形写神|文人画': ['以形写神', '→', '气韵生动', '→', '意境', '→', '文人画'],
-  '以形写神|逸品': ['以形写神', '→', '气韵生动', '→', '神品', '→', '逸品'],
-};
-function runReasoning() {
-  const from = document.getElementById('fromConcept').value;
-  const to = document.getElementById('toConcept').value;
-  const key = `${from}|${to}`;
-  let path = reasoningMap[key] || [from, '→', '气韵生动', '→', '道', '→', to];
-  const explain = {
-    '气韵生动|文人画': '气韵生动为六法之首，是中华艺术的根本追求。由气韵而生意境，意境超越形似而达逸品，逸品正是文人画的最高格——不拘常法、笔简意足、得之自然，文人画以气韵为灵魂、以逸品为极则，完成了从画技到艺道的升华。',
-    '气韵生动|意境': '气韵生动要求表现对象的精神韵律与生命感，而意境正是主客体交融后所达到的情景合一境界。以形写神是通向气韵的途径，气韵的最终呈现即为意境——超以象外，得其环中。',
-  }[key] || `从「${from}」出发，经由中华艺道核心范畴的层层递进，最终抵达「${to}」。中华艺理本是一以贯之的整体，由技法而进乎艺，由艺而进乎道，万法归宗，最终指向气韵生动、道法自然的艺术境界。`;
-  document.getElementById('reasoningResult').classList.remove('hidden');
-  const chain = document.getElementById('pathChain');
-  chain.innerHTML = path.map(p => {
-    if (p === '→') return '<span class="text-gray-400 text-xl">→</span>';
-    return `<span class="concept-tag" style="background:rgb(var(--brand-rgb));color:white">${p}</span>`;
-  }).join('');
-  document.getElementById('pathExplain').textContent = explain;
+// ========== 全局时空宇宙 Canvas 实现 ==========
+const canvas = document.getElementById('spaceCanvas');
+const ctx = canvas.getContext('2d');
+const slider = document.getElementById('timeSlider');
+const yearDisplay = document.getElementById('yearDisplay');
+const tooltip = document.getElementById('spaceTooltip');
+const detailModal = document.getElementById('personDetail');
+const detailContent = document.getElementById('detailContent');
+let currentYear = 700;
+let mouseX=0, mouseY=0;
+let hoveredPerson=null;
+let stars = []; // 背景星空粒子
+let personStars = []; // 人物星辰
+
+// 初始化Canvas尺寸
+function resizeCanvas(){
+ const rect = canvas.parentElement.getBoundingClientRect();
+ canvas.width = rect.width;
+ canvas.height = rect.height;
+ // 为每个人物随机分配位置
+ personStars = allPeople.map(p => ({
+ ...p,
+ x: Math.random()*(canvas.width-100)+50,
+ y: Math.random()*(canvas.height-150)+50,
+ r: 6 + Math.random()*4,
+ twinkle: Math.random()*Math.PI*2,
+ speed: 0.02 + Math.random()*0.03
+ }));
+ // 生成背景星星
+ stars = [];
+ for(let i=0;i<300;i++){
+ stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5,twinkle:Math.random()*Math.PI*2,speed:0.01+Math.random()*0.02});
+ }
 }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
-// 响应式
-window.addEventListener('resize', () => {
-  catChart.resize();
-  dynastyChart.resize();
-  graphChart.resize();
+// 时间轴事件
+slider.addEventListener('input', () => {
+ currentYear = parseInt(slider.value);
+ const era = getEra(currentYear);
+ yearDisplay.textContent = `公元 ${currentYear>0?currentYear:'前'+Math.abs(currentYear)} 年 · ${era}`;
 });
 
-function scrollToAndHighlight(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.scrollIntoView({behavior:'smooth', block:'start'});
-  el.style.transition = 'box-shadow 0.3s';
-  el.style.boxShadow = '0 0 0 3px rgba(178,34,34,0.3)';
-  setTimeout(() => { el.style.boxShadow = ''; }, 1200);
+// 鼠标移动事件
+canvas.addEventListener('mousemove', (e) => {
+ const rect = canvas.getBoundingClientRect();
+ mouseX = e.clientX - rect.left;
+ mouseY = e.clientY - rect.top;
+ // 检测悬停人物
+ hoveredPerson = null;
+ for(let ps of personStars){
+ const life = ps.birth < currentYear && currentYear < ps.death;
+ if(life){
+ const dx = ps.x - mouseX;
+ const dy = ps.y - mouseY;
+ if(dx*dx + dy*dy < (ps.r+8)*(ps.r+8)){
+ hoveredPerson = ps;
+ break;
+ }
+ }
+ }
+ if(hoveredPerson){
+ tooltip.style.display = 'block';
+ tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+ tooltip.style.top = (e.clientY - rect.top + 15) + 'px';
+ tooltip.innerHTML = `<div style="color:#d4af37;font-size:16px;font-weight:700;margin-bottom:4px;">${hoveredPerson.name} <span style="font-size:12px;opacity:0.8;">${hoveredPerson.era}·${hoveredPerson.type}</span></div>
+<div style="font-size:13px;opacity:0.9;">${hoveredPerson.tags}</div>
+<div style="font-size:12px;margin-top:4px;">生卒：${hoveredPerson.birth>0?hoveredPerson.birth:'前'+Math.abs(hoveredPerson.birth)} - ${hoveredPerson.death>0?hoveredPerson.death:'前'+Math.abs(hoveredPerson.death)} 在世年龄：${hoveredPerson.death-hoveredPerson.birth}岁</div>`;
+ canvas.style.cursor = 'pointer';
+ } else {
+ tooltip.style.display = 'none';
+ canvas.style.cursor = 'default';
+ }
+});
+
+canvas.addEventListener('mouseleave', () => {
+ tooltip.style.display = 'none';
+ hoveredPerson = null;
+});
+
+// 点击人物显示详情
+canvas.addEventListener('click', () => {
+ if(hoveredPerson){
+ detailContent.innerHTML = `<div style="text-align:center;margin-bottom:20px;">
+<h3 style="color:#8B2323;font-size:28px;margin-bottom:8px;">${hoveredPerson.name}</h3>
+<p style="color:#5c4033;font-size:16px;">${hoveredPerson.era} · ${typeConfig[hoveredPerson.type].icon} ${hoveredPerson.type} · ${hoveredPerson.tags}</p>
+<p style="color:#888;margin-top:5px;">生卒：${hoveredPerson.birth>0?hoveredPerson.birth:'前'+Math.abs(hoveredPerson.birth)} - ${hoveredPerson.death>0?hoveredPerson.death:'前'+Math.abs(hoveredPerson.death)} 在世年龄：${hoveredPerson.death-hoveredPerson.birth}岁</p>
+</div>
+<div style="font-size:17px;line-height:1.8;color:#2c2c2c;text-indent:2em;margin-bottom:20px;">${hoveredPerson.desc}</div>
+<div style="background:#f8f4e9;padding:15px;border-radius:8px;border-left:4px solid #d4af37;">
+<p style="font-weight:600;color:#8B2323;margin-bottom:8px;">📚 代表作品</p>
+<p style="font-size:15px;line-height:1.6;">${hoveredPerson.works||'作品流传千古'}</p>
+</div>`;
+ detailModal.style.display = 'block';
+ }
+});
+document.getElementById('personDetail').addEventListener('click',(e)=>{ if(e.target.id==='personDetail') detailModal.style.display='none'; });
+
+// 绘制动画循环
+function draw(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ // 背景渐变
+ const grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width/1.2);
+ grad.addColorStop(0, '#1a0f0a');
+ grad.addColorStop(1, '#050201');
+ ctx.fillStyle = grad;
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+ // 背景星空闪烁
+ for(let s of stars){
+ s.twinkle += s.speed;
+ const alpha = 0.3 + Math.sin(s.twinkle)*0.3;
+ ctx.beginPath();
+ ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+ ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+ ctx.fill();
+ }
+ // 绘制同类型人物淡金色连线（同在世且距离<200）
+ const alivePeople = personStars.filter(p => p.birth < currentYear && currentYear < p.death);
+ for(let i=0;i<alivePeople.length;i++){
+ for(let j=i+1;j<alivePeople.length;j++){
+ const p1 = alivePeople[i], p2=alivePeople[j];
+ if(p1.type === p2.type){
+ const dx=p1.x-p2.x, dy=p1.y-p2.y, d=Math.sqrt(dx*dx+dy*dy);
+ if(d<200){
+ ctx.beginPath();
+ ctx.moveTo(p1.x,p1.y);
+ ctx.lineTo(p2.x,p2.y);
+ const tconf = typeConfig[p1.type];
+ ctx.strokeStyle = tconf.color + '33'; // 20%透明度
+ ctx.lineWidth = 1;
+ ctx.stroke();
+ }
+ }
+ }
+ }
+ // 绘制人物星辰
+ for(let ps of personStars){
+ ps.twinkle += ps.speed;
+ const tconf = typeConfig[ps.type];
+ const alive = ps.birth < currentYear && currentYear < ps.death;
+ const alpha = alive ? 0.9+Math.sin(ps.twinkle)*0.1 : 0.15;
+ // 光晕
+ if(alive || hoveredPerson===ps){
+ const haloGrad = ctx.createRadialGradient(ps.x,ps.y,0,ps.x,ps.y,ps.r*4);
+ haloGrad.addColorStop(0, tconf.color + '88');
+ haloGrad.addColorStop(1, tconf.color + '00');
+ ctx.fillStyle = haloGrad;
+ ctx.beginPath();
+ ctx.arc(ps.x,ps.y,ps.r*4,0,Math.PI*2);
+ ctx.fill();
+ }
+ // 星辰本体
+ ctx.beginPath();
+ ctx.arc(ps.x,ps.y,ps.r,0,Math.PI*2);
+ ctx.fillStyle = alive ? tconf.color : '#555555';
+ ctx.globalAlpha = alpha;
+ ctx.fill();
+ ctx.globalAlpha = 1;
+ // 悬停放大
+ if(hoveredPerson===ps){
+ ctx.beginPath();
+ ctx.arc(ps.x,ps.y,ps.r*1.8,0,Math.PI*2);
+ ctx.strokeStyle = '#d4af37';
+ ctx.lineWidth = 2;
+ ctx.stroke();
+ // 显示名字在星辰上方
+ ctx.font = '16px Noto Serif SC';
+ ctx.fillStyle = '#fff';
+ ctx.textAlign='center';
+ ctx.fillText(ps.name, ps.x, ps.y - ps.r*3);
+ }
+ }
+ // 绘制时间线当前年的光带
+ ctx.fillStyle = 'rgba(212,175,55,0.08)';
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+ requestAnimationFrame(draw);
 }
-// Hero按钮导航事件绑定
-document.getElementById('btnArch').addEventListener('click', () => scrollToAndHighlight('architecture'));
-document.getElementById('btnClassic').addEventListener('click', () => scrollToAndHighlight('classics'));
-document.getElementById('btnGraph').addEventListener('click', () => scrollToAndHighlight('graph'));
-// 顶部导航锚点
-document.querySelectorAll('nav a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const id = a.getAttribute('href').slice(1);
-    document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
-  });
-});
-</script>
+draw();
+        })();
+    </script>
 </body>
 </html>
